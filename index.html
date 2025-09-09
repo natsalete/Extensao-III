@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Martins Poços - Solução Completa em Perfuração</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Lucide Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+  </head>
+  <body>
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+      <div class="splash-logo">Martins Poços</div>
+      <div class="splash-text">Solução Completa em Perfuração</div>
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content">
+      <!-- Topbar -->
+      <nav class="topbar">
+        <div class="container">
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="#" class="logo">Martins Poços</a>
+            <div class="d-flex gap-3">
+              <a href="#servicos" class="text-decoration-none text-dark"
+                >Serviços</a
+              >
+              <a href="#beneficios" class="text-decoration-none text-dark"
+                >Benefícios</a
+              >
+              <a href="#contato" class="text-decoration-none text-dark"
+                >Contato</a
+              >
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="container text-center">
+          <h1 class="hero-title">Solução Completa em Perfuração de Poços</h1>
+          <p class="hero-subtitle">
+            Água de qualidade e abundância para sua propriedade rural ou urbana
+          </p>
+          <button id="hero-cta" class="btn btn-primary-custom">
+            Solicitar Serviço
+          </button>
+        </div>
+      </section>
+
+      <!-- Services Section -->
+      <section id="servicos" class="services-section">
+        <div class="container">
+          <h2 class="text-center mb-5">Nossos Serviços</h2>
+          <div class="row g-4">
+            <div class="col-md-4">
+              <div class="service-card">
+                <i data-lucide="construction" class="service-icon"></i>
+                <h3 class="service-title">Perfuração de Poços</h3>
+                <p>
+                  Utilizamos tecnologia de ponta para perfuração precisa e
+                  segura.
+                </p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="service-card">
+                <i data-lucide="droplets" class="service-icon"></i>
+                <h3 class="service-title">Análise da Água</h3>
+                <p>Garantimos a qualidade e potabilidade da água extraída.</p>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="service-card">
+                <i data-lucide="droplet" class="service-icon"></i>
+                <h3 class="service-title">Manutenção</h3>
+                <p>Serviços contínuos de manutenção e limpeza de poços.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Benefits Section -->
+      <section id="beneficios" class="benefits-section">
+        <div class="container">
+          <h2 class="text-center mb-5">Por Que Escolher a Martins Poços</h2>
+          <div class="row">
+            <div class="col-md-4">
+              <div class="benefit-item">
+                <i data-lucide="shield-check" class="benefit-icon"></i>
+                <div>
+                  <h3 class="benefit-title">Segurança</h3>
+                  <p>Processos certificados e seguros em todas as etapas.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="benefit-item">
+                <i data-lucide="check-circle" class="benefit-icon"></i>
+                <div>
+                  <h3 class="benefit-title">Qualidade</h3>
+                  <p>Equipamentos modernos e equipe técnica especializada.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="benefit-item">
+                <i data-lucide="truck" class="benefit-icon"></i>
+                <div>
+                  <h3 class="benefit-title">Atendimento Regional</h3>
+                  <p>Cobrimos diversas regiões com rapidez e eficiência.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Call to Action -->
+      <section id="contato" class="cta-section">
+        <div class="container">
+          <h2 class="cta-title">
+            Transforme Sua Propriedade com Água de Qualidade
+          </h2>
+          <p class="cta-subtitle">
+            Entre em contato e descubra como podemos ajudar você
+          </p>
+          <button
+            id="cta-button"
+            class="btn btn-primary-custom d-flex align-items-center mx-auto gap-2"
+          >
+            <i data-lucide="send" style="width: 20px; height: 20px"></i>
+            <span>Solicitar Serviço Agora</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="container">
+          <p>&copy; 2024 Martins Poços. Todos os direitos reservados.</p>
+          <p class="mt-2">Solução completa em perfuração de poços artesianos</p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script> 
+
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <!-- Lucide -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+  </body>
+</html>
