@@ -1,0 +1,59 @@
+body {
+  background-color: #f8f9fa;
+}
+.navbar-custom {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.card {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.card-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  border-radius: 1rem 1rem 0 0 !important;
+  padding: 1.5rem;
+}
+.btn-primary-custom {
+  background-color: #eab308;
+  border-color: #eab308;
+  color: #1e40af;
+  font-weight: bold;
+  border-radius: 0.5rem;
+}
+.btn-primary-custom:hover {
+  background-color: #facc15;
+  border-color: #facc15;
+  color: #1e40af;
+}
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.status-pendente {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+.status-em_andamento {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+.status-concluido {
+  background-color: #d1fae5;
+  color: #059669;
+}
+.welcome-card {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  border-radius: 1rem;
+}
+.service-card {
+  transition: transform 0.3s ease;
+}
+.service-card:hover {
+  transform: translateY(-2px);
+}

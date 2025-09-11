@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Martins Poços</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/login.css">
+</head>
+<body>
+    <a href="/" class="back-home">← Voltar ao Início</a>
+    
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="login-card">
+                    <div class="login-header">
+                        <h2 class="mb-0">Martins Poços</h2>
+                        <p class="mb-0">Faça seu login</p>
+                    </div>
+                    <div class="login-body">
+                        <form method="POST" action="/login">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">Senha</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary-custom w-100 mb-3">
+                                Entrar
+                            </button>
+                        </form>
+                        
+                        <hr>
+                        
+                        <div class="text-center">
+                            <p class="mb-0">Não tem uma conta?</p>
+                            <a href="/register" class="btn btn-outline-primary w-100 mt-2">
+                                Criar Conta
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <small class="text-muted">
+                                <strong>Conta de teste:</strong><br>
+                                Email: admin@martinspocos.com<br>
+                                Senha: admin123
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

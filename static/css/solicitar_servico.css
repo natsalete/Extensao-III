@@ -1,0 +1,70 @@
+body {
+  background-color: #f8f9fa;
+}
+.navbar-custom {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.card {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.card-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  border-radius: 1rem 1rem 0 0 !important;
+  padding: 1.5rem;
+}
+.service-option {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+.service-option:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+.service-option.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+.service-option input[type="radio"] {
+  display: none;
+}
+.form-control {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+.btn-primary-custom {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  padding: 0.75rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+.btn-primary-custom:hover {
+  background-color: #1e40af;
+  border-color: #1e40af;
+}
+.btn-outline-secondary {
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+}
+.service-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+}

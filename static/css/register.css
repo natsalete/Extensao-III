@@ -1,0 +1,53 @@
+body {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+}
+.register-card {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+.register-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+.register-body {
+  padding: 2rem;
+}
+.btn-primary-custom {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+.btn-primary-custom:hover {
+  background-color: #1e40af;
+  border-color: #1e40af;
+}
+.form-control {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 2px solid #e5e7eb;
+}
+.form-control:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+.back-home {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+.back-home:hover {
+  color: #facc15;
+}

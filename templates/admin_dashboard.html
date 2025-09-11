@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Administrador - Martins Poços</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="../static/css/.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+      <div class="container">
+        <a class="navbar-brand text-white fw-bold" href="/">
+          <i data-lucide="shield-check" class="me-2"></i>
+          Martins Poços - Admin
+        </a>
+        <div class="navbar-nav ms-auto">
+          <span class="navbar-text text-white me-3">
+            Administrador: {{.UserName}}
+          </span>
+          <a class="nav-link text-white" href="/logout">Sair</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <!-- Welcome Card -->
+      <div class="welcome-card p-4 mb-4">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h2 class="mb-3">Painel Administrativo</h2>
+            <p class="mb-0">
+              Gerencie todas as solicitações de serviços dos clientes.
+            </p>
+          </div>
+          <div class="col-md-4 text-end">
+            <i data-lucide="users" style="width: 64px; height: 64px"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card stats-card">
+            <div class="card-body text-center">
+              <i
+                data-lucide="clock"
+                class="text-warning mb-3"
+                style="width: 48px; height: 48px"
+              ></i>
+              <h5 class="card-title">Pendentes</h5>
+              <h3 class="text-warning" id="pending-count">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stats-card">
+            <div class="card-body text-center">
+              <i
+                data-lucide="settings"
+                class="text-primary mb-3"
+                style="width: 48px; height: 48px"
+              ></i>
+              <h5 class="card-title">Em Andamento</h5>
+              <h3 class="text-primary" id="progress-count">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stats-card">
+            <div class="card-body text-center">
+              <i
+                data-lucide="check-circle"
+                class="text-success mb-3"
+                style="width: 48px; height: 48px"
+              ></i>
+              <h5 class="card-title">Concluídos</h5>
+              <h3 class="text-success" id="completed-count">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stats-card">
+            <div class="card-body text-center">
+              <i
+                data-lucide="list"
+                class="text-info mb-3"
+                style="width: 48px; height: 48px"
+              ></i>
+              <h5 class="card-title">Total</h5>
+              <h3 class="text-info" id="total-count">0</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Service Requests Management -->
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">
+            <i data-lucide="settings" class="me-2"></i>
+            Gerenciar Solicitações
+          </h4>
+        </div>
+        <div class="card-body">
+          {{if .Requests}}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Serviço</th>
+                  <th>Descrição</th>
+                  <th>Status</th>
+                  <th>Data</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{range .Requests}}
+                <tr data-request-id="{{.ID}}">
+                  <td>
+                    <div>
+                      <strong>{{.UserName}}</strong><br />
+                      <small class="text-muted">{{.UserEmail}}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      {{if eq .ServiceType "perfuracao"}}
+                      <i
+                        data-lucide="construction"
+                        class="text-primary me-2"
+                      ></i>
+                      Perfuração de Poços {{else if eq .ServiceType "analise"}}
+                      <i data-lucide="droplets" class="text-primary me-2"></i>
+                      Análise da Água {{else if eq .ServiceType "manutencao"}}
+                      <i data-lucide="droplet" class="text-primary me-2"></i>
+                      Manutenção {{else}}
+                      <i data-lucide="help-circle" class="text-muted me-2"></i>
+                      {{.ServiceType}} {{end}}
+                    </div>
+                  </td>
+                  <td>
+                    <div
+                      class="text-truncate"
+                      style="max-width: 200px"
+                      title="{{.Description}}"
+                    >
+                      {{.Description}}
+                    </div>
+                  </td>
+                  <td class="status-cell">
+                    {{if eq .Status "pendente"}}
+                    <span class="status-badge status-pendente">Pendente</span>
+                    {{else if eq .Status "em_andamento"}}
+                    <span class="status-badge status-em_andamento"
+                      >Em Andamento</span
+                    >
+                    {{else if eq .Status "concluido"}}
+                    <span class="status-badge status-concluido">Concluído</span>
+                    {{end}}
+                  </td>
+                  <td>{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
+                  <td>
+                    <div class="btn-group-vertical" role="group">
+                      {{if ne .Status "pendente"}}
+                      <button
+                        class="btn btn-status btn-warning-custom"
+                        onclick="updateStatus('{{.ID}}', 'pendente')"
+                      >
+                        Pendente
+                      </button>
+                      {{end}} {{if ne .Status "em_andamento"}}
+                      <button
+                        class="btn btn-status btn-info-custom"
+                        onclick="updateStatus('{{.ID}}', 'em_andamento')"
+                      >
+                        Em Andamento
+                      </button>
+
+                      {{end}} {{if ne .Status "concluido"}}
+                      <button
+                        class="btn btn-status btn-success-custom"
+                        onclick="updateStatus('{{.ID}}', 'concluido')"
+                      >
+                        Concluído
+                      </button>
+                      {{end}}
+                    </div>
+                  </td>
+                </tr>
+                {{end}}
+              </tbody>
+            </table>
+          </div>
+          {{else}}
+          <div class="text-center py-5">
+            <i
+              data-lucide="inbox"
+              class="text-muted mb-3"
+              style="width: 64px; height: 64px"
+            ></i>
+            <h5 class="text-muted">Nenhuma solicitação encontrada</h5>
+            <p class="text-muted">Aguardando solicitações dos clientes...</p>
+          </div>
+          {{end}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast for notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div id="statusToast" class="toast" role="alert">
+        <div class="toast-body">Status atualizado com sucesso!</div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/admin_dashboard.js"></script>
+  </body>
+</html>

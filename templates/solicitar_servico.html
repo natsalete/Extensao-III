@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitar Serviço - Martins Poços</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <link rel="stylesheet" href="../static/css/solicitar_servico.css" />
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-white fw-bold" href="/">
+                <i data-lucide="droplet" class="me-2"></i>
+                Martins Poços
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/dashboard/cliente">Dashboard</a>
+                <a class="nav-link text-white" href="/logout">Sair</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h3 class="mb-0">
+                            <i data-lucide="plus-circle" class="me-2"></i>
+                            Solicitar Novo Serviço
+                        </h3>
+                        <p class="mb-0 mt-2 opacity-75">Escolha o serviço desejado e descreva suas necessidades</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="POST" action="/solicitar-servico">
+                            <!-- Service Type Selection -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold mb-3">Tipo de Serviço *</label>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="service-option d-block" for="perfuracao">
+                                            <input type="radio" name="service_type" value="perfuracao" id="perfuracao" required>
+                                            <div class="text-center">
+                                                <i data-lucide="construction" class="service-icon text-primary"></i>
+                                                <h5 class="fw-bold">Perfuração de Poços</h5>
+                                                <p class="text-muted small">Perfuração de poços artesianos com tecnologia moderna</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="service-option d-block" for="analise">
+                                            <input type="radio" name="service_type" value="analise" id="analise" required>
+                                            <div class="text-center">
+                                                <i data-lucide="droplets" class="service-icon text-primary"></i>
+                                                <h5 class="fw-bold">Análise da Água</h5>
+                                                <p class="text-muted small">Análise completa da qualidade e potabilidade da água</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="service-option d-block" for="manutencao">
+                                            <input type="radio" name="service_type" value="manutencao" id="manutencao" required>
+                                            <div class="text-center">
+                                                <i data-lucide="droplet" class="service-icon text-primary"></i>
+                                                <h5 class="fw-bold">Manutenção</h5>
+                                                <p class="text-muted small">Manutenção preventiva e corretiva de poços existentes</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="mb-4">
+                                <label for="description" class="form-label fw-bold">Descrição Detalhada *</label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="description" 
+                                    name="description" 
+                                    rows="5" 
+                                    placeholder="Descreva em detalhes suas necessidades, localização, urgência e qualquer informação relevante..."
+                                    required
+                                ></textarea>
+                                <div class="form-text">Quanto mais informações você fornecer, melhor poderemos atender sua solicitação.</div>
+                            </div>
+
+                            <!-- Service Information -->
+                            <div class="alert alert-info d-flex align-items-center">
+                                <i data-lucide="info" class="me-2"></i>
+                                <div>
+                                    <strong>Como funciona:</strong><br>
+                                    1. Envie sua solicitação com todos os detalhes<br>
+                                    2. Nossa equipe analisará e entrará em contato<br>
+                                    3. Acompanhe o status pelo seu dashboard<br>
+                                    4. Receba o serviço com qualidade garantida
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between">
+                                <a href="/dashboard/cliente" class="btn btn-outline-secondary">
+                                    <i data-lucide="arrow-left" class="me-2"></i>
+                                    Voltar ao Dashboard
+                                </a>
+                                <button type="submit" class="btn btn-primary-custom">
+                                    <i data-lucide="send" class="me-2"></i>
+                                    Enviar Solicitação
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script>
+        
+    </script>
+</body>
+</html>
