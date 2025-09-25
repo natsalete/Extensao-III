@@ -67,6 +67,7 @@ func (m *ServiceModel) GetAll() ([]ServiceRequest, error) {
 		       sr.created_at, sr.updated_at, u.name, u.email
 		FROM service_requests sr
 		JOIN users u ON sr.user_id = u.id
+		JOIN user_types ut ON u.user_type_id = ut.id
 		ORDER BY sr.created_at DESC`
 
 	rows, err := m.DB.Query(query)
@@ -102,6 +103,7 @@ func (m *ServiceModel) GetByID(id int) (*ServiceRequest, error) {
 		       sr.created_at, sr.updated_at, u.name, u.email
 		FROM service_requests sr
 		JOIN users u ON sr.user_id = u.id
+		JOIN user_types ut ON u.user_type_id = ut.id
 		WHERE sr.id = $1`
 	
 	err := m.DB.QueryRow(query, id).Scan(
