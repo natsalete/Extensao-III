@@ -27,13 +27,26 @@
     </nav>
 
     <div class="container mt-4">
+      <!-- Success Message -->
+      {{if .SuccessMsg}}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i data-lucide="check-circle" class="me-2"></i>
+        {{.SuccessMsg}}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {{end}}
+
       <!-- Welcome Card -->
       <div class="welcome-card p-4 mb-4">
         <div class="row align-items-center">
           <div class="col-md-8">
             <h2 class="mb-3">Bem-vindo ao seu painel, {{.UserName}}!</h2>
             <p class="mb-0">
-              Gerencie suas solicitações de serviços e acompanhe o andamento dos
+              Gerencie suas solicitações de vistoria e acompanhe o andamento dos
               seus projetos.
             </p>
           </div>
@@ -48,7 +61,7 @@
 
       <!-- Stats Cards -->
       <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
               <i
@@ -56,25 +69,25 @@
                 class="text-warning mb-3"
                 style="width: 48px; height: 48px"
               ></i>
-              <h5 class="card-title">Pendentes</h5>
-              <h3 class="text-warning">{{len (index . "PendingCount")}}</h3>
+              <h5 class="card-title">Solicitadas</h5>
+              <h3 class="text-warning">{{.PendingCount}}</h3>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
               <i
-                data-lucide="settings"
-                class="text-primary mb-3"
+                data-lucide="calendar-check"
+                class="text-info mb-3"
                 style="width: 48px; height: 48px"
               ></i>
-              <h5 class="card-title">Em Andamento</h5>
-              <h3 class="text-primary">{{len (index . "InProgressCount")}}</h3>
+              <h5 class="card-title">Confirmadas</h5>
+              <h3 class="text-info">{{.ConfirmedCount}}</h3>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
               <i
@@ -82,8 +95,21 @@
                 class="text-success mb-3"
                 style="width: 48px; height: 48px"
               ></i>
-              <h5 class="card-title">Concluídos</h5>
-              <h3 class="text-success">{{len (index . "CompletedCount")}}</h3>
+              <h5 class="card-title">Realizadas</h5>
+              <h3 class="text-success">{{.CompletedCount}}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card service-card">
+            <div class="card-body text-center">
+              <i
+                data-lucide="x-circle"
+                class="text-danger mb-3"
+                style="width: 48px; height: 48px"
+              ></i>
+              <h5 class="card-title">Canceladas</h5>
+              <h3 class="text-danger">{{.CanceledCount}}</h3>
             </div>
           </div>
         </div>
@@ -94,7 +120,7 @@
         <div class="card-header">
           <h4 class="mb-0">
             <i data-lucide="list" class="me-2"></i>
-            Minhas Solicitações
+            Minhas Solicitações de Vistoria
           </h4>
         </div>
         <div class="card-body">
@@ -104,9 +130,12 @@
               <thead>
                 <tr>
                   <th>Serviço</th>
-                  <th>Descrição</th>
+                  <th>Nome</th>
+                  <th>Endereço</th>
+                  <th>Data/Hora Preferencial</th>
                   <th>Status</th>
-                  <th>Data</th>
+                  <th>Solicitado em</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,33 +151,74 @@
                       Perfuração de Poços {{else if eq .ServiceType "analise"}}
                       <i data-lucide="droplets" class="text-primary me-2"></i>
                       Análise da Água {{else if eq .ServiceType "manutencao"}}
-                      <i data-lucide="droplet" class="text-primary me-2"></i>
+                      <i data-lucide="wrench" class="text-primary me-2"></i>
                       Manutenção {{else}}
                       <i data-lucide="help-circle" class="text-muted me-2"></i>
                       {{.ServiceType}} {{end}}
                     </div>
                   </td>
                   <td>
-                    <div
-                      class="text-truncate"
-                      style="max-width: 200px"
-                      title="{{.Description}}"
-                    >
-                      {{.Description}}
+                    <strong>{{.FullName}}</strong>
+                  </td>
+                  <td>
+                    <div class="small">
+                      {{.Logradouro}}, {{.Numero}}<br />
+                      {{.Bairro}} - {{.Cidade}}/{{.Estado}}
                     </div>
                   </td>
                   <td>
-                    {{if eq .Status "pendente"}}
-                    <span class="status-badge status-pendente">Pendente</span>
-                    {{else if eq .Status "em_andamento"}}
-                    <span class="status-badge status-em_andamento"
-                      >Em Andamento</span
+                    <div class="small">
+                      {{.PreferredDate.Format "02/01/2006"}}<br />
+                      <strong>{{.PreferredTime}}</strong>
+                    </div>
+                  </td>
+                  <td>
+                    {{if eq .Status "SOLICITADA"}}
+                    <span class="status-badge status-solicitada"
+                      >Solicitada</span
                     >
-                    {{else if eq .Status "concluido"}}
-                    <span class="status-badge status-concluido">Concluído</span>
+                    {{else if eq .Status "CONFIRMADA"}}
+                    <span class="status-badge status-confirmada"
+                      >Confirmada</span
+                    >
+                    {{else if eq .Status "REALIZADA"}}
+                    <span class="status-badge status-realizada">Realizada</span>
+                    {{else if eq .Status "CANCELADA"}}
+                    <span class="status-badge status-cancelada">Cancelada</span>
                     {{end}}
                   </td>
-                  <td>{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
+                  <td class="small">
+                    {{.CreatedAt.Format "02/01/2006 15:04"}}
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <a
+                        href="/solicitacao/{{.ID}}"
+                        class="btn btn-outline-primary btn-sm"
+                        title="Ver Detalhes"
+                      >
+                        <i data-lucide="eye"></i>
+                      </a>
+                      {{if eq .Status "SOLICITADA"}}
+                      <a
+                        href="/solicitacao/{{.ID}}/editar"
+                        class="btn btn-outline-warning btn-sm"
+                        title="Editar"
+                      >
+                        <i data-lucide="edit"></i>
+                      </a>
+                      <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm"
+                        title="Cancelar"
+                        onclick="cancelarSolicitacao('{{.ID}}')"
+                      >
+                        <i data-lucide="x"></i>
+                      </button>
+
+                      {{end}}
+                    </div>
+                  </td>
                 </tr>
                 {{end}}
               </tbody>
@@ -162,7 +232,7 @@
               style="width: 64px; height: 64px"
             ></i>
             <h5 class="text-muted">Nenhuma solicitação encontrada</h5>
-            <p class="text-muted">Faça sua primeira solicitação de serviço!</p>
+            <p class="text-muted">Faça sua primeira solicitação de vistoria!</p>
             <a href="/solicitar-servico" class="btn btn-primary-custom">
               <i data-lucide="plus" class="me-2"></i>
               Nova Solicitação
@@ -173,7 +243,47 @@
       </div>
     </div>
 
+    <!-- Modal de Confirmação de Cancelamento -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i data-lucide="alert-triangle" class="me-2 text-warning"></i>
+              Cancelar Solicitação
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Tem certeza que deseja cancelar esta solicitação de vistoria?</p>
+            <p class="text-muted small">Esta ação não poderá ser desfeita.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Não, manter
+            </button>
+            <form id="cancelForm" method="POST" style="display: inline">
+              <button type="submit" class="btn btn-danger">
+                <i data-lucide="x" class="me-2"></i>
+                Sim, cancelar
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../static/js/cliente_dashboard.js"></script>
   </body>
 </html>

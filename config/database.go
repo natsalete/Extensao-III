@@ -52,13 +52,23 @@ func createTables() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
+	// Nova tabela de solicitações de serviços com campos atualizados
 	serviceRequestTable := `
 	CREATE TABLE IF NOT EXISTS service_requests (
 		id SERIAL PRIMARY KEY,
 		user_id INTEGER REFERENCES users(id),
+		full_name VARCHAR(200) NOT NULL,
 		service_type VARCHAR(50) NOT NULL,
 		description TEXT,
-		status VARCHAR(20) DEFAULT 'pendente' CHECK (status IN ('pendente', 'em_andamento', 'concluido')),
+		cep VARCHAR(10) NOT NULL,
+		logradouro VARCHAR(200) NOT NULL,
+		numero VARCHAR(20) NOT NULL,
+		bairro VARCHAR(100) NOT NULL,
+		cidade VARCHAR(100) NOT NULL,
+		estado VARCHAR(2) NOT NULL,
+		preferred_date DATE NOT NULL,
+		preferred_time TIME NOT NULL,
+		status VARCHAR(20) DEFAULT 'SOLICITADA' CHECK (status IN ('SOLICITADA', 'CONFIRMADA', 'REALIZADA', 'CANCELADA')),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
@@ -72,6 +82,45 @@ func createTables() {
 		log.Fatal("Error creating users table:", err)
 	}
 
+	// Primeiro, verificar se a tabela antiga existe e fazer migração se necessário
+	var exists bool
+	err := DB.QueryRow(`
+		SELECT EXISTS (
+			SELECT FROM information_schema.tables 
+			WHERE table_schema = 'public' 
+			AND table_name = 'service_requests'
+		)`).Scan(&exists)
+	
+	if err != nil {
+		log.Fatal("Error checking table existence:", err)
+	}
+
+	if exists {
+		// Verificar se já tem as novas colunas
+		var hasNewColumns bool
+		err = DB.QueryRow(`
+			SELECT EXISTS (
+				SELECT FROM information_schema.columns 
+				WHERE table_name = 'service_requests' 
+				AND column_name = 'full_name'
+			)`).Scan(&hasNewColumns)
+		
+		if err != nil {
+			log.Fatal("Error checking column existence:", err)
+		}
+
+		if !hasNewColumns {
+			// Fazer backup dos dados antigos se necessário
+			log.Println("Migrating service_requests table to new structure...")
+			
+			// Renomear tabela antiga
+			if _, err := DB.Exec("ALTER TABLE service_requests RENAME TO service_requests_old"); err != nil {
+				log.Fatal("Error renaming old table:", err)
+			}
+		}
+	}
+
+	// Criar nova tabela
 	if _, err := DB.Exec(serviceRequestTable); err != nil {
 		log.Fatal("Error creating service_requests table:", err)
 	}
