@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Solicitação - Martins Poços</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <link rel="stylesheet" href="../../static/css/cliente_dashboard.css" />
+    <link rel="stylesheet" href="../static/css/ver_solicitacao.css" />
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-white fw-bold" href="/">
+                <i data-lucide="droplet" class="me-2"></i>
+                Martins Poços
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link text-white" href="/dashboard/cliente">Dashboard</a>
+                <a class="nav-link text-white" href="/logout">Sair</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>
+                        <i data-lucide="file-text" class="me-2 text-primary"></i>
+                        Detalhes da Solicitação #{{.Service.ID}}
+                    </h2>
+                    <div>
+                        {{if eq .Service.Status "SOLICITADA"}}
+                        <span class="status-badge status-solicitada">Solicitada</span>
+                        {{else if eq .Service.Status "CONFIRMADA"}}
+                        <span class="status-badge status-confirmada">Confirmada</span>
+                        {{else if eq .Service.Status "REALIZADA"}}
+                        <span class="status-badge status-realizada">Realizada</span>
+                        {{else if eq .Service.Status "CANCELADA"}}
+                        <span class="status-badge status-cancelada">Cancelada</span>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Service Info Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-lucide="info" class="me-2"></i>
+                            Informações do Serviço
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Tipo de Serviço:</strong><br>
+                                <div class="d-flex align-items-center mt-1">
+                                    {{if eq .Service.ServiceType "perfuracao"}}
+                                    <i data-lucide="construction" class="text-primary me-2"></i>
+                                    Perfuração de Poços
+                                    {{else if eq .Service.ServiceType "analise"}}
+                                    <i data-lucide="droplets" class="text-primary me-2"></i>
+                                    Análise da Água
+                                    {{else if eq .Service.ServiceType "manutencao"}}
+                                    <i data-lucide="wrench" class="text-primary me-2"></i>
+                                    Manutenção
+                                    {{end}}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Data da Solicitação:</strong><br>
+                                <span class="text-muted">{{.Service.CreatedAt.Format "02/01/2006 às 15:04"}}</span>
+                            </div>
+                        </div>
+                        
+                        {{if .Service.UpdatedAt.After .Service.CreatedAt}}
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <strong>Última Atualização:</strong><br>
+                                <span class="text-muted">{{.Service.UpdatedAt.Format "02/01/2006 às 15:04"}}</span>
+                            </div>
+                        </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <!-- Contact Info Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-lucide="user" class="me-2"></i>
+                            Dados do Solicitante
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <strong>Nome Completo:</strong><br>
+                                <span class="fs-5">{{.Service.FullName}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-lucide="map-pin" class="me-2"></i>
+                            Local da Vistoria
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="address-display">
+                            <p class="mb-1"><strong>{{.Service.Logradouro}}, {{.Service.Numero}}</strong></p>
+                            <p class="mb-1">{{.Service.Bairro}}</p>
+                            <p class="mb-1">{{.Service.Cidade}} - {{.Service.Estado}}</p>
+                            <p class="mb-0"><strong>CEP:</strong> {{.Service.CEP}}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-lucide="calendar" class="me-2"></i>
+                            Agendamento Preferencial
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i data-lucide="calendar-days" class="text-primary me-2"></i>
+                                    <div>
+                                        <strong>Data:</strong><br>
+                                        <span class="fs-5">{{.Service.PreferredDate.Format "02/01/2006"}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i data-lucide="clock" class="text-primary me-2"></i>
+                                    <div>
+                                        <strong>Horário:</strong><br>
+                                        <span class="fs-5">{{.Service.PreferredTime}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description Card -->
+                {{if .Service.Description}}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-lucide="file-text" class="me-2"></i>
+                            Observações Adicionais
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">{{.Service.Description}}</p>
+                    </div>
+                </div>
+                {{end}}
+
+                <!-- Status Timeline -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-lucide="activity" class="me-2"></i>
+                            Status da Solicitação
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item {{if eq .Service.Status "SOLICITADA" "CONFIRMADA" "REALIZADA" "CANCELADA"}}completed{{end}}">
+                                <div class="timeline-marker bg-warning"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Solicitação Enviada</h6>
+                                    <p class="text-muted small mb-0">{{.Service.CreatedAt.Format "02/01/2006 às 15:04"}}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {{if eq .Service.Status "CONFIRMADA" "REALIZADA"}}completed{{end}}">
+                                <div class="timeline-marker {{if eq .Service.Status "CONFIRMADA" "REALIZADA"}}bg-info{{else}}bg-light{{end}}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Vistoria Confirmada</h6>
+                                    <p class="text-muted small mb-0">
+                                        {{if eq .Service.Status "CONFIRMADA" "REALIZADA"}}
+                                            Nossa equipe confirmará o agendamento
+                                        {{else}}
+                                            Aguardando confirmação
+                                        {{end}}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item {{if eq .Service.Status "REALIZADA"}}completed{{end}}">
+                                <div class="timeline-marker {{if eq .Service.Status "REALIZADA"}}bg-success{{else}}bg-light{{end}}"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Vistoria Realizada</h6>
+                                    <p class="text-muted small mb-0">
+                                        {{if eq .Service.Status "REALIZADA"}}
+                                            Vistoria concluída com sucesso
+                                        {{else}}
+                                            Vistoria será realizada na data agendada
+                                        {{end}}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {{if eq .Service.Status "CANCELADA"}}
+                            <div class="timeline-item completed">
+                                <div class="timeline-marker bg-danger"></div>
+                                <div class="timeline-content">
+                                    <h6 class="mb-1">Solicitação Cancelada</h6>
+                                    <p class="text-muted small mb-0">{{.Service.UpdatedAt.Format "02/01/2006 às 15:04"}}</p>
+                                </div>
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between mb-4">
+                    <a href="/dashboard/cliente" class="btn btn-outline-secondary">
+                        <i data-lucide="arrow-left" class="me-2"></i>
+                        Voltar ao Dashboard
+                    </a>
+                    <div>
+                        {{if eq .Service.Status "SOLICITADA"}}
+                        <a href="/solicitacao/{{.Service.ID}}/editar" class="btn btn-warning me-2">
+                            <i data-lucide="edit" class="me-2"></i>
+                            Editar Solicitação
+                        </a>
+                        <button type="button" 
+                            class="btn btn-danger" 
+                            onclick="cancelarSolicitacao('{{.Service.ID}}')">
+                            <i data-lucide="x" class="me-2"></i>
+                                Cancelar Solicitação
+                        </button>
+
+                        {{else}}
+                        <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                            <i data-lucide="printer" class="me-2"></i>
+                            Imprimir Detalhes
+                        </button>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Cancelamento -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i data-lucide="alert-triangle" class="me-2 text-warning"></i>
+                        Cancelar Solicitação
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja cancelar esta solicitação de vistoria?</p>
+                    <p class="text-muted small">Esta ação não poderá ser desfeita.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Não, manter
+                    </button>
+                    <form id="cancelForm" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i data-lucide="x" class="me-2"></i>
+                            Sim, cancelar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/ver_solicitacao.js"></script>
+</body>
+</html>

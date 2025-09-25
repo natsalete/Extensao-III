@@ -1,0 +1,82 @@
+.address-display {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #2563eb;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -19px;
+  top: 8px;
+  bottom: -32px;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -30px;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-content h6 {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.timeline-item.completed .timeline-content h6 {
+  color: #059669;
+}
+
+.status-solicitada {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-confirmada {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.status-realizada {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.status-cancelada {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+@media print {
+  .navbar,
+  .btn,
+  .modal {
+    display: none !important;
+  }
+
+  .container {
+    max-width: none !important;
+  }
+}

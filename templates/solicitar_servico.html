@@ -1,125 +1,351 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Solicitar Serviço - Martins Poços</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+
     <link rel="stylesheet" href="../static/css/solicitar_servico.css" />
-</head>
-<body>
+  </head>
+  <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container">
-            <a class="navbar-brand text-white fw-bold" href="/">
-                <i data-lucide="droplet" class="me-2"></i>
-                Martins Poços
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link text-white" href="/dashboard/cliente">Dashboard</a>
-                <a class="nav-link text-white" href="/logout">Sair</a>
-            </div>
+      <div class="container">
+        <a class="navbar-brand text-white fw-bold" href="/">
+          <i data-lucide="droplet" class="me-2"></i>
+          Martins Poços
+        </a>
+        <div class="navbar-nav ms-auto">
+          <a class="nav-link text-white" href="/dashboard/cliente">Dashboard</a>
+          <a class="nav-link text-white" href="/logout">Sair</a>
         </div>
+      </div>
     </nav>
 
     <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h3 class="mb-0">
-                            <i data-lucide="plus-circle" class="me-2"></i>
-                            Solicitar Novo Serviço
-                        </h3>
-                        <p class="mb-0 mt-2 opacity-75">Escolha o serviço desejado e descreva suas necessidades</p>
-                    </div>
-                    <div class="card-body p-4">
-                        <form method="POST" action="/solicitar-servico">
-                            <!-- Service Type Selection -->
-                            <div class="mb-4">
-                                <label class="form-label fw-bold mb-3">Tipo de Serviço *</label>
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="service-option d-block" for="perfuracao">
-                                            <input type="radio" name="service_type" value="perfuracao" id="perfuracao" required>
-                                            <div class="text-center">
-                                                <i data-lucide="construction" class="service-icon text-primary"></i>
-                                                <h5 class="fw-bold">Perfuração de Poços</h5>
-                                                <p class="text-muted small">Perfuração de poços artesianos com tecnologia moderna</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="service-option d-block" for="analise">
-                                            <input type="radio" name="service_type" value="analise" id="analise" required>
-                                            <div class="text-center">
-                                                <i data-lucide="droplets" class="service-icon text-primary"></i>
-                                                <h5 class="fw-bold">Análise da Água</h5>
-                                                <p class="text-muted small">Análise completa da qualidade e potabilidade da água</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="service-option d-block" for="manutencao">
-                                            <input type="radio" name="service_type" value="manutencao" id="manutencao" required>
-                                            <div class="text-center">
-                                                <i data-lucide="droplet" class="service-icon text-primary"></i>
-                                                <h5 class="fw-bold">Manutenção</h5>
-                                                <p class="text-muted small">Manutenção preventiva e corretiva de poços existentes</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Description -->
-                            <div class="mb-4">
-                                <label for="description" class="form-label fw-bold">Descrição Detalhada *</label>
-                                <textarea 
-                                    class="form-control" 
-                                    id="description" 
-                                    name="description" 
-                                    rows="5" 
-                                    placeholder="Descreva em detalhes suas necessidades, localização, urgência e qualquer informação relevante..."
-                                    required
-                                ></textarea>
-                                <div class="form-text">Quanto mais informações você fornecer, melhor poderemos atender sua solicitação.</div>
-                            </div>
-
-                            <!-- Service Information -->
-                            <div class="alert alert-info d-flex align-items-center">
-                                <i data-lucide="info" class="me-2"></i>
-                                <div>
-                                    <strong>Como funciona:</strong><br>
-                                    1. Envie sua solicitação com todos os detalhes<br>
-                                    2. Nossa equipe analisará e entrará em contato<br>
-                                    3. Acompanhe o status pelo seu dashboard<br>
-                                    4. Receba o serviço com qualidade garantida
-                                </div>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex justify-content-between">
-                                <a href="/dashboard/cliente" class="btn btn-outline-secondary">
-                                    <i data-lucide="arrow-left" class="me-2"></i>
-                                    Voltar ao Dashboard
-                                </a>
-                                <button type="submit" class="btn btn-primary-custom">
-                                    <i data-lucide="send" class="me-2"></i>
-                                    Enviar Solicitação
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card">
+            <div class="card-header text-center">
+              <h3 class="mb-0">
+                <i data-lucide="plus-circle" class="me-2"></i>
+                Solicitar Nova Vistoria
+              </h3>
+              <p class="mb-0 mt-2 opacity-75">
+                Preencha todos os dados para agendar sua vistoria
+              </p>
             </div>
+            <div class="card-body p-4">
+              <form method="POST" action="/solicitar-servico" id="serviceForm">
+                <!-- Dados Pessoais -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i data-lucide="user" class="me-2"></i>
+                    Dados Pessoais
+                  </h5>
+                  <div class="row">
+                    <div class="col-md-12 mb-3">
+                      <label for="full_name" class="form-label fw-bold"
+                        >Nome Completo *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="full_name"
+                        name="full_name"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Service Type Selection -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i data-lucide="settings" class="me-2"></i>
+                    Tipo de Serviço *
+                  </h5>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label class="service-option d-block" for="perfuracao">
+                        <input
+                          type="radio"
+                          name="service_type"
+                          value="perfuracao"
+                          id="perfuracao"
+                        />
+                        <div class="text-center">
+                          <i
+                            data-lucide="construction"
+                            class="service-icon text-primary"
+                          ></i>
+                          <h6 class="fw-bold">Perfuração de Poços</h6>
+                          <p class="text-muted small mb-0">
+                            Perfuração de poços artesianos
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="service-option d-block" for="analise">
+                        <input
+                          type="radio"
+                          name="service_type"
+                          value="analise"
+                          id="analise"
+                        />
+                        <div class="text-center">
+                          <i
+                            data-lucide="droplets"
+                            class="service-icon text-primary"
+                          ></i>
+                          <h6 class="fw-bold">Análise da Água</h6>
+                          <p class="text-muted small mb-0">
+                            Análise de qualidade da água
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="service-option d-block" for="manutencao">
+                        <input
+                          type="radio"
+                          name="service_type"
+                          value="manutencao"
+                          id="manutencao"
+                        />
+                        <div class="text-center">
+                          <i
+                            data-lucide="wrench"
+                            class="service-icon text-primary"
+                          ></i>
+                          <h6 class="fw-bold">Manutenção</h6>
+                          <p class="text-muted small mb-0">
+                            Manutenção de poços existentes
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Endereço da Vistoria -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i data-lucide="map-pin" class="me-2"></i>
+                    Local da Vistoria *
+                  </h5>
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="cep" class="form-label fw-bold">CEP *</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="cep"
+                        name="cep"
+                        placeholder="00000-000"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-8 mb-3">
+                      <label for="logradouro" class="form-label fw-bold"
+                        >Logradouro *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="logradouro"
+                        name="logradouro"
+                        placeholder="Nome da rua, avenida..."
+                        required
+                      />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label for="numero" class="form-label fw-bold"
+                        >Número *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="numero"
+                        name="numero"
+                        placeholder="123"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-5 mb-3">
+                      <label for="bairro" class="form-label fw-bold"
+                        >Bairro *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="bairro"
+                        name="bairro"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="cidade" class="form-label fw-bold"
+                        >Cidade *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="cidade"
+                        name="cidade"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label for="estado" class="form-label fw-bold"
+                        >Estado *</label
+                      >
+                      <select
+                        class="form-control"
+                        id="estado"
+                        name="estado"
+                        required
+                      >
+                        <option value="">Selecione</option>
+                        <option value="AC">AC</option>
+                        <option value="AL">AL</option>
+                        <option value="AP">AP</option>
+                        <option value="AM">AM</option>
+                        <option value="BA">BA</option>
+                        <option value="CE">CE</option>
+                        <option value="DF">DF</option>
+                        <option value="ES">ES</option>
+                        <option value="GO">GO</option>
+                        <option value="MA">MA</option>
+                        <option value="MT">MT</option>
+                        <option value="MS">MS</option>
+                        <option value="MG">MG</option>
+                        <option value="PA">PA</option>
+                        <option value="PB">PB</option>
+                        <option value="PR">PR</option>
+                        <option value="PE">PE</option>
+                        <option value="PI">PI</option>
+                        <option value="RJ">RJ</option>
+                        <option value="RN">RN</option>
+                        <option value="RS">RS</option>
+                        <option value="RO">RO</option>
+                        <option value="RR">RR</option>
+                        <option value="SC">SC</option>
+                        <option value="SP">SP</option>
+                        <option value="SE">SE</option>
+                        <option value="TO">TO</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Agendamento -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i data-lucide="calendar" class="me-2"></i>
+                    Agendamento Preferencial *
+                  </h5>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="preferred_date" class="form-label fw-bold"
+                        >Data Preferencial *</label
+                      >
+                      <input
+                        type="date"
+                        class="form-control"
+                        id="preferred_date"
+                        name="preferred_date"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="preferred_time" class="form-label fw-bold"
+                        >Horário Preferencial *</label
+                      >
+                      <select
+                        class="form-control"
+                        id="preferred_time"
+                        name="preferred_time"
+                        required
+                      >
+                        <option value="">Selecione o horário</option>
+                        <option value="08:00">08:00 - Manhã</option>
+                        <option value="09:00">09:00 - Manhã</option>
+                        <option value="10:00">10:00 - Manhã</option>
+                        <option value="11:00">11:00 - Manhã</option>
+                        <option value="13:00">13:00 - Tarde</option>
+                        <option value="14:00">14:00 - Tarde</option>
+                        <option value="15:00">15:00 - Tarde</option>
+                        <option value="16:00">16:00 - Tarde</option>
+                        <option value="17:00">17:00 - Tarde</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i data-lucide="file-text" class="me-2"></i>
+                    Informações Adicionais
+                  </h5>
+                  <label for="description" class="form-label fw-bold"
+                    >Observações</label
+                  >
+                  <textarea
+                    class="form-control"
+                    id="description"
+                    name="description"
+                    rows="4"
+                    placeholder="Descreva detalhes importantes sobre o local, urgência ou qualquer informação que possa ajudar nossa equipe..."
+                  ></textarea>
+                  <div class="form-text">
+                    Informações adicionais que possam ajudar no atendimento.
+                  </div>
+                </div>
+
+                <!-- Service Information -->
+                <div class="alert alert-info d-flex align-items-start">
+                  <i data-lucide="info" class="me-2 mt-1"></i>
+                  <div>
+                    <strong>Como funciona:</strong><br />
+                    1. Envie sua solicitação com todos os detalhes<br />
+                    2. Nossa equipe analisará e entrará em contato em até 24h<br />
+                    3. Confirmaremos o agendamento da vistoria<br />
+                    4. Acompanhe o status pelo seu dashboard
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between">
+                  <a
+                    href="/dashboard/cliente"
+                    class="btn btn-outline-secondary"
+                  >
+                    <i data-lucide="arrow-left" class="me-2"></i>
+                    Voltar ao Dashboard
+                  </a>
+                  <button type="submit" class="btn btn-primary-custom">
+                    <i data-lucide="send" class="me-2"></i>
+                    Enviar Solicitação
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script>
-        
-    </script>
-</body>
+    <script src="../static/js/solicitar_servico.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+  </body>
 </html>

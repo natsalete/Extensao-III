@@ -36,8 +36,17 @@ func SetupRoutes() *mux.Router {
 	// Protected routes with authentication middleware
 	r.HandleFunc("/dashboard/cliente", middleware.RequireAuth(serviceController.ClienteDashboard))
 	r.HandleFunc("/dashboard/admin", middleware.RequireAuth(middleware.RequireAdmin(serviceController.AdminDashboard)))
+	
+	// Service request routes
 	r.HandleFunc("/solicitar-servico", middleware.RequireAuth(serviceController.SolicitarServico))
+	r.HandleFunc("/solicitacao/{id:[0-9]+}", middleware.RequireAuth(serviceController.VerSolicitacao)).Methods("GET")
+	r.HandleFunc("/solicitacao/{id:[0-9]+}/editar", middleware.RequireAuth(serviceController.EditarSolicitacao))
+	r.HandleFunc("/solicitacao/{id:[0-9]+}/cancelar", middleware.RequireAuth(serviceController.CancelarSolicitacao)).Methods("POST")
+	
+	// Admin routes
 	r.HandleFunc("/update-status", middleware.RequireAuth(middleware.RequireAdmin(serviceController.UpdateStatus))).Methods("POST")
+	
+	// Logout
 	r.HandleFunc("/logout", middleware.RequireAuth(authController.Logout))
 
 	return r
