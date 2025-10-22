@@ -8,7 +8,10 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="../static/css/cliente_dashboard.css" />
   </head>
   <body>
@@ -16,7 +19,7 @@
     <nav class="navbar navbar-expand-lg navbar-custom">
       <div class="container">
         <a class="navbar-brand text-white fw-bold" href="/">
-          <i data-lucide="droplet" class="me-2"></i>
+          <i class="bi bi-droplet-fill me-2"></i>
           Martins Poços
         </a>
         <div class="navbar-nav ms-auto">
@@ -30,7 +33,7 @@
       <!-- Success Message -->
       {{if .SuccessMsg}}
       <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i data-lucide="check-circle" class="me-2"></i>
+        <i class="bi bi-check-circle-fill me-2"></i>
         {{.SuccessMsg}}
         <button
           type="button"
@@ -52,7 +55,7 @@
           </div>
           <div class="col-md-4 text-end">
             <a href="/solicitar-servico" class="btn btn-primary-custom btn-lg">
-              <i data-lucide="plus" class="me-2"></i>
+              <i class="bi bi-plus-circle-fill me-2"></i>
               Nova Solicitação
             </a>
           </div>
@@ -65,9 +68,8 @@
           <div class="card service-card">
             <div class="card-body text-center">
               <i
-                data-lucide="clock"
-                class="text-warning mb-3"
-                style="width: 48px; height: 48px"
+                class="bi bi-clock-fill text-warning mb-3"
+                style="font-size: 48px"
               ></i>
               <h5 class="card-title">Solicitadas</h5>
               <h3 class="text-warning">{{.PendingCount}}</h3>
@@ -78,9 +80,8 @@
           <div class="card service-card">
             <div class="card-body text-center">
               <i
-                data-lucide="calendar-check"
-                class="text-info mb-3"
-                style="width: 48px; height: 48px"
+                class="bi bi-calendar-check-fill text-info mb-3"
+                style="font-size: 48px"
               ></i>
               <h5 class="card-title">Confirmadas</h5>
               <h3 class="text-info">{{.ConfirmedCount}}</h3>
@@ -91,9 +92,8 @@
           <div class="card service-card">
             <div class="card-body text-center">
               <i
-                data-lucide="check-circle"
-                class="text-success mb-3"
-                style="width: 48px; height: 48px"
+                class="bi bi-check-circle-fill text-success mb-3"
+                style="font-size: 48px"
               ></i>
               <h5 class="card-title">Realizadas</h5>
               <h3 class="text-success">{{.CompletedCount}}</h3>
@@ -104,9 +104,8 @@
           <div class="card service-card">
             <div class="card-body text-center">
               <i
-                data-lucide="x-circle"
-                class="text-danger mb-3"
-                style="width: 48px; height: 48px"
+                class="bi bi-x-circle-fill text-danger mb-3"
+                style="font-size: 48px"
               ></i>
               <h5 class="card-title">Canceladas</h5>
               <h3 class="text-danger">{{.CanceledCount}}</h3>
@@ -119,7 +118,7 @@
       <div class="card">
         <div class="card-header">
           <h4 class="mb-0">
-            <i data-lucide="list" class="me-2"></i>
+            <i class="bi bi-list-ul me-2"></i>
             Minhas Solicitações de Vistoria
           </h4>
         </div>
@@ -143,18 +142,7 @@
                 <tr>
                   <td>
                     <div class="d-flex align-items-center">
-                      {{if eq .ServiceType "perfuracao"}}
-                      <i
-                        data-lucide="construction"
-                        class="text-primary me-2"
-                      ></i>
-                      Perfuração de Poços {{else if eq .ServiceType "analise"}}
-                      <i data-lucide="droplets" class="text-primary me-2"></i>
-                      Análise da Água {{else if eq .ServiceType "manutencao"}}
-                      <i data-lucide="wrench" class="text-primary me-2"></i>
-                      Manutenção {{else}}
-                      <i data-lucide="help-circle" class="text-muted me-2"></i>
-                      {{.ServiceType}} {{end}}
+                      {{.ServiceTypeName}}
                     </div>
                   </td>
                   <td>
@@ -167,25 +155,22 @@
                     </div>
                   </td>
                   <td>
-                    <div class="small">
-                      {{.PreferredDate.Format "02/01/2006"}}<br />
-                      <strong>{{.PreferredTime}}</strong>
+                    <div class="datetime-cell">
+                      <i class="bi bi-calendar3 me-1"></i>
+                      <span class="date-text"
+                        >{{.PreferredDate.Format "02/01/2006"}}</span
+                      >
+                      <br />
+                      <i class="bi bi-clock me-1"></i>
+                      <strong class="time-text"
+                        >{{slice .PreferredTime 0 5}}</strong
+                      >
                     </div>
                   </td>
                   <td>
-                    {{if eq .Status "SOLICITADA"}}
-                    <span class="status-badge status-solicitada"
-                      >Solicitada</span
+                    <span class="status-badge {{.StatusColor}}"
+                      >{{.StatusName}}</span
                     >
-                    {{else if eq .Status "CONFIRMADA"}}
-                    <span class="status-badge status-confirmada"
-                      >Confirmada</span
-                    >
-                    {{else if eq .Status "REALIZADA"}}
-                    <span class="status-badge status-realizada">Realizada</span>
-                    {{else if eq .Status "CANCELADA"}}
-                    <span class="status-badge status-cancelada">Cancelada</span>
-                    {{end}}
                   </td>
                   <td class="small">
                     {{.CreatedAt.Format "02/01/2006 15:04"}}
@@ -197,15 +182,15 @@
                         class="btn btn-outline-primary btn-sm"
                         title="Ver Detalhes"
                       >
-                        <i data-lucide="eye"></i>
+                        <i class="bi bi-eye-fill"></i>
                       </a>
-                      {{if eq .Status "SOLICITADA"}}
+                      {{if eq .StatusID 1}}
                       <a
                         href="/solicitacao/{{.ID}}/editar"
                         class="btn btn-outline-warning btn-sm"
                         title="Editar"
                       >
-                        <i data-lucide="edit"></i>
+                        <i class="bi bi-pencil-fill"></i>
                       </a>
                       <button
                         type="button"
@@ -213,9 +198,8 @@
                         title="Cancelar"
                         onclick="cancelarSolicitacao('{{.ID}}')"
                       >
-                        <i data-lucide="x"></i>
+                        <i class="bi bi-x-lg"></i>
                       </button>
-
                       {{end}}
                     </div>
                   </td>
@@ -226,15 +210,11 @@
           </div>
           {{else}}
           <div class="text-center py-5">
-            <i
-              data-lucide="inbox"
-              class="text-muted mb-3"
-              style="width: 64px; height: 64px"
-            ></i>
+            <i class="bi bi-inbox text-muted mb-3" style="font-size: 64px"></i>
             <h5 class="text-muted">Nenhuma solicitação encontrada</h5>
             <p class="text-muted">Faça sua primeira solicitação de vistoria!</p>
             <a href="/solicitar-servico" class="btn btn-primary-custom">
-              <i data-lucide="plus" class="me-2"></i>
+              <i class="bi bi-plus-circle-fill me-2"></i>
               Nova Solicitação
             </a>
           </div>
@@ -249,7 +229,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">
-              <i data-lucide="alert-triangle" class="me-2 text-warning"></i>
+              <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
               Cancelar Solicitação
             </h5>
             <button
@@ -272,7 +252,7 @@
             </button>
             <form id="cancelForm" method="POST" style="display: inline">
               <button type="submit" class="btn btn-danger">
-                <i data-lucide="x" class="me-2"></i>
+                <i class="bi bi-x-lg me-2"></i>
                 Sim, cancelar
               </button>
             </form>
@@ -282,8 +262,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../static/js/cliente_dashboard.js"></script>
   </body>
 </html>

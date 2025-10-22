@@ -39,7 +39,7 @@ func createTables() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	// Tabela de usuários refatorada
+	// Tabela de usuários
 	userTable := `
 	CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
@@ -52,13 +52,38 @@ func createTables() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	// Nova tabela de solicitações de serviços com campos atualizados
+	// Nova tabela: Tipos de Serviço
+	serviceTypesTable := `
+	CREATE TABLE IF NOT EXISTS service_types (
+		id SERIAL PRIMARY KEY,
+		code VARCHAR(50) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
+		description TEXT,
+		icon VARCHAR(50),
+		active BOOLEAN DEFAULT true,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	// Nova tabela: Status de Solicitação
+	requestStatusTable := `
+	CREATE TABLE IF NOT EXISTS request_status (
+		id SERIAL PRIMARY KEY,
+		code VARCHAR(50) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
+		description TEXT,
+		color_class VARCHAR(50),
+		display_order INTEGER,
+		active BOOLEAN DEFAULT true,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	// Tabela de solicitações de serviços refatorada
 	serviceRequestTable := `
 	CREATE TABLE IF NOT EXISTS service_requests (
 		id SERIAL PRIMARY KEY,
 		user_id INTEGER REFERENCES users(id),
 		full_name VARCHAR(200) NOT NULL,
-		service_type VARCHAR(50) NOT NULL,
+		service_type_id INTEGER REFERENCES service_types(id),
 		description TEXT,
 		cep VARCHAR(10) NOT NULL,
 		logradouro VARCHAR(200) NOT NULL,
@@ -68,90 +93,89 @@ func createTables() {
 		estado VARCHAR(2) NOT NULL,
 		preferred_date DATE NOT NULL,
 		preferred_time TIME NOT NULL,
-		status VARCHAR(20) DEFAULT 'SOLICITADA' CHECK (status IN ('SOLICITADA', 'CONFIRMADA', 'REALIZADA', 'CANCELADA')),
+		status_id INTEGER REFERENCES request_status(id),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
 	// Criar tabelas na ordem correta
-	if _, err := DB.Exec(userTypesTable); err != nil {
-		log.Fatal("Error creating user_types table:", err)
+	tables := []struct {
+		name  string
+		query string
+	}{
+		{"user_types", userTypesTable},
+		{"users", userTable},
+		{"service_types", serviceTypesTable},
+		{"request_status", requestStatusTable},
+		{"service_requests", serviceRequestTable},
 	}
 
-	if _, err := DB.Exec(userTable); err != nil {
-		log.Fatal("Error creating users table:", err)
-	}
-
-	// Primeiro, verificar se a tabela antiga existe e fazer migração se necessário
-	var exists bool
-	err := DB.QueryRow(`
-		SELECT EXISTS (
-			SELECT FROM information_schema.tables 
-			WHERE table_schema = 'public' 
-			AND table_name = 'service_requests'
-		)`).Scan(&exists)
-	
-	if err != nil {
-		log.Fatal("Error checking table existence:", err)
-	}
-
-	if exists {
-		// Verificar se já tem as novas colunas
-		var hasNewColumns bool
-		err = DB.QueryRow(`
-			SELECT EXISTS (
-				SELECT FROM information_schema.columns 
-				WHERE table_name = 'service_requests' 
-				AND column_name = 'full_name'
-			)`).Scan(&hasNewColumns)
-		
-		if err != nil {
-			log.Fatal("Error checking column existence:", err)
-		}
-
-		if !hasNewColumns {
-			// Fazer backup dos dados antigos se necessário
-			log.Println("Migrating service_requests table to new structure...")
-			
-			// Renomear tabela antiga
-			if _, err := DB.Exec("ALTER TABLE service_requests RENAME TO service_requests_old"); err != nil {
-				log.Fatal("Error renaming old table:", err)
-			}
+	for _, table := range tables {
+		if _, err := DB.Exec(table.query); err != nil {
+			log.Fatalf("Error creating %s table: %v", table.name, err)
 		}
 	}
 
-	// Criar nova tabela
-	if _, err := DB.Exec(serviceRequestTable); err != nil {
-		log.Fatal("Error creating service_requests table:", err)
-	}
-
-	// Inserir tipos de usuário padrão
+	// Inserir dados padrão
 	insertDefaultUserTypes()
-	// Criar administrador padrão
+	insertDefaultServiceTypes()
+	insertDefaultRequestStatus()
 	createDefaultAdmin()
 }
 
+
 func insertDefaultUserTypes() {
-	// Verificar se os tipos já existem
 	var count int
 	DB.QueryRow("SELECT COUNT(*) FROM user_types").Scan(&count)
 	
 	if count == 0 {
-		// Inserir tipos de usuário
 		_, err := DB.Exec(`
 			INSERT INTO user_types (type_name, description) VALUES 
 			('cliente', 'Cliente padrão do sistema'),
 			('gestor', 'Gestor/Administrador do sistema')`)
 		if err != nil {
 			log.Fatal("Error inserting default user types:", err)
-		} else {
-			log.Println("Default user types created: cliente, gestor")
 		}
+		log.Println("Default user types created")
+	}
+}
+
+func insertDefaultServiceTypes() {
+	var count int
+	DB.QueryRow("SELECT COUNT(*) FROM service_types").Scan(&count)
+	
+	if count == 0 {
+		_, err := DB.Exec(`
+			INSERT INTO service_types (code, name, description, icon) VALUES 
+			('perfuracao', 'Perfuração de Poços', 'Perfuração de poços artesianos', 'construction'),
+			('analise', 'Análise da Água', 'Análise de qualidade da água', 'droplets'),
+			('manutencao', 'Manutenção', 'Manutenção de poços existentes', 'wrench')`)
+		if err != nil {
+			log.Fatal("Error inserting default service types:", err)
+		}
+		log.Println("Default service types created")
+	}
+}
+
+func insertDefaultRequestStatus() {
+	var count int
+	DB.QueryRow("SELECT COUNT(*) FROM request_status").Scan(&count)
+	
+	if count == 0 {
+		_, err := DB.Exec(`
+			INSERT INTO request_status (code, name, description, color_class, display_order) VALUES 
+			('SOLICITADA', 'Solicitada', 'Solicitação enviada e aguardando análise', 'status-solicitada', 1),
+			('CONFIRMADA', 'Confirmada', 'Vistoria confirmada e agendada', 'status-confirmada', 2),
+			('REALIZADA', 'Realizada', 'Vistoria realizada com sucesso', 'status-realizada', 3),
+			('CANCELADA', 'Cancelada', 'Solicitação cancelada', 'status-cancelada', 4)`)
+		if err != nil {
+			log.Fatal("Error inserting default request status:", err)
+		}
+		log.Println("Default request status created")
 	}
 }
 
 func createDefaultAdmin() {
-	// Verificar se já existe um gestor
 	var count int
 	DB.QueryRow(`
 		SELECT COUNT(*) FROM users u
@@ -159,7 +183,6 @@ func createDefaultAdmin() {
 		WHERE ut.type_name = 'gestor'`).Scan(&count)
 	
 	if count == 0 {
-		// Buscar o ID do tipo gestor
 		var gestorTypeID int
 		err := DB.QueryRow("SELECT id FROM user_types WHERE type_name = 'gestor'").Scan(&gestorTypeID)
 		if err != nil {

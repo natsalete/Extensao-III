@@ -22,6 +22,7 @@ func SetupRoutes() *mux.Router {
 	homeController := controllers.NewHomeController()
 	authController := controllers.NewAuthController(userModel)
 	serviceController := controllers.NewServiceController(serviceModel)
+	// adminController := controllers.NewAdminController(serviceModel)
 
 	// Static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
@@ -33,20 +34,20 @@ func SetupRoutes() *mux.Router {
 	r.HandleFunc("/register", authController.RegisterPage).Methods("GET")
 	r.HandleFunc("/register", authController.Register).Methods("POST")
 
-	// Protected routes with authentication middleware
-	r.HandleFunc("/dashboard/cliente", middleware.RequireAuth(serviceController.ClienteDashboard))
-	r.HandleFunc("/dashboard/admin", middleware.RequireAuth(middleware.RequireAdmin(serviceController.AdminDashboard)))
+	// ========== CLIENT ROUTES (Protected) ==========
+	r.HandleFunc("/dashboard/cliente", middleware.RequireAuth(serviceController.ClienteDashboard)).Methods("GET")
 	
-	// Service request routes
-	r.HandleFunc("/solicitar-servico", middleware.RequireAuth(serviceController.SolicitarServico))
+	// Service request management
+	r.HandleFunc("/solicitar-servico", middleware.RequireAuth(serviceController.SolicitarServico)).Methods("GET", "POST")
 	r.HandleFunc("/solicitacao/{id:[0-9]+}", middleware.RequireAuth(serviceController.VerSolicitacao)).Methods("GET")
-	r.HandleFunc("/solicitacao/{id:[0-9]+}/editar", middleware.RequireAuth(serviceController.EditarSolicitacao))
+	r.HandleFunc("/solicitacao/{id:[0-9]+}/editar", middleware.RequireAuth(serviceController.EditarSolicitacao)).Methods("GET", "POST")
 	r.HandleFunc("/solicitacao/{id:[0-9]+}/cancelar", middleware.RequireAuth(serviceController.CancelarSolicitacao)).Methods("POST")
 	
-	// Admin routes
-	r.HandleFunc("/update-status", middleware.RequireAuth(middleware.RequireAdmin(serviceController.UpdateStatus))).Methods("POST")
+	// ========== ADMIN ROUTES (Protected + Admin Only) ==========
+	// r.HandleFunc("/dashboard/admin", middleware.RequireAuth(middleware.RequireAdmin(adminController.AdminDashboard))).Methods("GET")
+	// r.HandleFunc("/admin/update-status", middleware.RequireAuth(middleware.RequireAdmin(adminController.UpdateStatus))).Methods("POST")
 	
-	// Logout
+	// ========== AUTH ROUTES ==========
 	r.HandleFunc("/logout", middleware.RequireAuth(authController.Logout))
 
 	return r
