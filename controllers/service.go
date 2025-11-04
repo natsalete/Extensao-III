@@ -1,17 +1,12 @@
 package controllers
 
 import (
-	"database/sql"
-	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
-	"time"
 
 	"martins-pocos/config"
 	"martins-pocos/models"
-	"martins-pocos/utils"
 
 	"github.com/gorilla/mux"
 )
@@ -24,11 +19,10 @@ func NewServiceController(serviceModel *models.ServiceModel) *ServiceController 
 	return &ServiceController{ServiceModel: serviceModel}
 }
 
+// ClienteDashboard - Dashboard do cliente
 func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Request) {
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userID, ok := session.Values["user_id"].(int)
+	userID, ok := c.getUserID(w, r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
@@ -38,25 +32,8 @@ func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Contar por status
-	pendingCount := 0
-	confirmedCount := 0
-	completedCount := 0
-	canceledCount := 0
-
-	for _, req := range requests {
-		switch req.Status {
-		case "SOLICITADA":
-			pendingCount++
-		case "CONFIRMADA":
-			confirmedCount++
-		case "REALIZADA":
-			completedCount++
-		case "CANCELADA":
-			canceledCount++
-		}
-	}
-
+	session, _ := config.GetSessionStore().Get(r, "session")
+	
 	data := struct {
 		UserName       string
 		Requests       []models.ServiceRequest
@@ -68,191 +45,68 @@ func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Requ
 	}{
 		UserName:       session.Values["user_name"].(string),
 		Requests:       requests,
-		PendingCount:   pendingCount,
-		ConfirmedCount: confirmedCount,
-		CompletedCount: completedCount,
-		CanceledCount:  canceledCount,
+		PendingCount:   c.countByStatus(requests, 1), // SOLICITADA
+		ConfirmedCount: c.countByStatus(requests, 2), // CONFIRMADA
+		CompletedCount: c.countByStatus(requests, 3), // REALIZADA
+		CanceledCount:  c.countByStatus(requests, 4), // CANCELADA
+		SuccessMsg:     c.getSuccessMessage(r),
 	}
 
-	if r.URL.Query().Get("success") == "created" {
-		data.SuccessMsg = "Solicitação criada com sucesso!"
-	} else if r.URL.Query().Get("success") == "updated" {
-		data.SuccessMsg = "Solicitação atualizada com sucesso!"
-	} else if r.URL.Query().Get("success") == "cancelled" {
-		data.SuccessMsg = "Solicitação cancelada com sucesso!"
-	}
-
-	tmpl := template.Must(template.ParseFiles("templates/cliente_dashboard.html"))
-	tmpl.Execute(w, data)
+	c.renderTemplate(w, "templates/cliente_dashboard.html", data)
 }
 
-
+// SolicitarServico - Criar nova solicitação
 func (c *ServiceController) SolicitarServico(w http.ResponseWriter, r *http.Request) {
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userID, ok := session.Values["user_id"].(int)
+	userID, ok := c.getUserID(w, r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
 	if r.Method == "GET" {
-		tmpl := template.Must(template.ParseFiles("templates/solicitar_servico.html"))
-		tmpl.Execute(w, nil)
+		c.showServiceRequestForm(w)
 		return
 	}
 
-	if r.Method == "POST" {
-		// Parse form data
-		err := r.ParseForm()
-		if err != nil {
-			utils.SendErrorResponse(w, "Erro ao processar formulário", http.StatusBadRequest)
-			return
-		}
-
-		// Parse date
-		preferredDate, err := time.Parse("2006-01-02", r.FormValue("preferred_date"))
-		if err != nil {
-			utils.SendErrorResponse(w, "Data inválida", http.StatusBadRequest)
-			return
-		}
-
-		service := &models.ServiceRequest{
-			UserID:        userID,
-			FullName:      r.FormValue("full_name"),
-			ServiceType:   r.FormValue("service_type"),
-			Description:   r.FormValue("description"),
-			CEP:           r.FormValue("cep"),
-			Logradouro:    r.FormValue("logradouro"),
-			Numero:        r.FormValue("numero"),
-			Bairro:        r.FormValue("bairro"),
-			Cidade:        r.FormValue("cidade"),
-			Estado:        r.FormValue("estado"),
-			PreferredDate: preferredDate,
-			PreferredTime: r.FormValue("preferred_time"),
-		}
-
-		err = c.ServiceModel.Create(service)
-		if err != nil {
-			utils.SendErrorResponse(w, "Erro ao criar solicitação", http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, "/dashboard/cliente?success=created", http.StatusFound)
-	}
+	c.createServiceRequest(w, r, userID)
 }
 
+// EditarSolicitacao - Editar solicitação existente
 func (c *ServiceController) EditarSolicitacao(w http.ResponseWriter, r *http.Request) {
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userID, ok := session.Values["user_id"].(int)
+	userID, ok := c.getUserID(w, r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
-	vars := mux.Vars(r)
-	requestID, err := strconv.Atoi(vars["id"])
+	requestID, err := c.getRequestID(r)
 	if err != nil {
 		http.Error(w, "ID inválido", http.StatusBadRequest)
 		return
 	}
 
 	if r.Method == "GET" {
-		// Buscar a solicitação
-		service, err := c.ServiceModel.GetByIDAndUser(requestID, userID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "Solicitação não encontrada", http.StatusNotFound)
-				return
-			}
-			http.Error(w, "Erro ao buscar solicitação", http.StatusInternalServerError)
-			return
-		}
-
-		// Verificar se pode editar (apenas SOLICITADA)
-		if service.Status != "SOLICITADA" {
-			http.Redirect(w, r, fmt.Sprintf("/solicitacao/%d", requestID), http.StatusFound)
-			return
-		}
-
-		data := struct {
-			Service *models.ServiceRequest
-		}{
-			Service: service,
-		}
-
-		tmpl := template.Must(template.ParseFiles("templates/editar_solicitacao.html"))
-		tmpl.Execute(w, data)
+		c.showEditForm(w, r, requestID, userID)
 		return
 	}
 
-	if r.Method == "POST" {
-		// Parse form data
-		err := r.ParseForm()
-		if err != nil {
-			utils.SendErrorResponse(w, "Erro ao processar formulário", http.StatusBadRequest)
-			return
-		}
-
-		// Parse date
-		preferredDate, err := time.Parse("2006-01-02", r.FormValue("preferred_date"))
-		if err != nil {
-			utils.SendErrorResponse(w, "Data inválida", http.StatusBadRequest)
-			return
-		}
-
-		service := &models.ServiceRequest{
-			ID:            requestID,
-			UserID:        userID,
-			FullName:      r.FormValue("full_name"),
-			ServiceType:   r.FormValue("service_type"),
-			Description:   r.FormValue("description"),
-			CEP:           r.FormValue("cep"),
-			Logradouro:    r.FormValue("logradouro"),
-			Numero:        r.FormValue("numero"),
-			Bairro:        r.FormValue("bairro"),
-			Cidade:        r.FormValue("cidade"),
-			Estado:        r.FormValue("estado"),
-			PreferredDate: preferredDate,
-			PreferredTime: r.FormValue("preferred_time"),
-		}
-
-		err = c.ServiceModel.Update(service)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				utils.SendErrorResponse(w, "Solicitação não pode ser editada", http.StatusBadRequest)
-				return
-			}
-			utils.SendErrorResponse(w, "Erro ao atualizar solicitação", http.StatusInternalServerError)
-			return
-		}
-
-		http.Redirect(w, r, "/dashboard/cliente?success=updated", http.StatusFound)
-	}
+	c.updateServiceRequest(w, r, requestID, userID)
 }
 
+// VerSolicitacao - Ver detalhes da solicitação
 func (c *ServiceController) VerSolicitacao(w http.ResponseWriter, r *http.Request) {
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userID, ok := session.Values["user_id"].(int)
+	userID, ok := c.getUserID(w, r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
-	vars := mux.Vars(r)
-	requestID, err := strconv.Atoi(vars["id"])
+	requestID, err := c.getRequestID(r)
 	if err != nil {
 		http.Error(w, "ID inválido", http.StatusBadRequest)
 		return
 	}
 
-	// Buscar a solicitação
 	service, err := c.ServiceModel.GetByIDAndUser(requestID, userID)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Error(w, "Solicitação não encontrada", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "Erro ao buscar solicitação", http.StatusInternalServerError)
+		c.handleNotFound(w, err, "Solicitação não encontrada")
 		return
 	}
 
@@ -262,97 +116,132 @@ func (c *ServiceController) VerSolicitacao(w http.ResponseWriter, r *http.Reques
 		Service: service,
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/ver_solicitacao.html"))
-	tmpl.Execute(w, data)
+	c.renderTemplate(w, "templates/ver_solicitacao.html", data)
 }
 
+// CancelarSolicitacao - Cancelar solicitação
 func (c *ServiceController) CancelarSolicitacao(w http.ResponseWriter, r *http.Request) {
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userID, ok := session.Values["user_id"].(int)
+	userID, ok := c.getUserID(w, r)
 	if !ok {
-		http.Redirect(w, r, "/login", http.StatusFound)
 		return
 	}
 
-	vars := mux.Vars(r)
-	requestID, err := strconv.Atoi(vars["id"])
+	requestID, err := c.getRequestID(r)
 	if err != nil {
-		utils.SendErrorResponse(w, "ID inválido", http.StatusBadRequest)
+		http.Error(w, "ID inválido", http.StatusBadRequest)
 		return
 	}
 
-	err = c.ServiceModel.Cancel(requestID, userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			utils.SendErrorResponse(w, "Solicitação não pode ser cancelada", http.StatusBadRequest)
-			return
-		}
-		utils.SendErrorResponse(w, "Erro ao cancelar solicitação", http.StatusInternalServerError)
+	if err := c.ServiceModel.Cancel(requestID, userID); err != nil {
+		c.handleUpdateError(w, err, "Solicitação não pode ser cancelada")
 		return
 	}
 
 	http.Redirect(w, r, "/dashboard/cliente?success=cancelled", http.StatusFound)
 }
 
-func (c *ServiceController) AdminDashboard(w http.ResponseWriter, r *http.Request) {
+// Helper methods
+func (c *ServiceController) getUserID(w http.ResponseWriter, r *http.Request) (int, bool) {
 	session, _ := config.GetSessionStore().Get(r, "session")
-	userType, ok := session.Values["user_type"].(string)
-	if !ok || userType != "gestor" {
-		http.Error(w, "Acesso negado", http.StatusForbidden)
+	userID, ok := session.Values["user_id"].(int)
+	if !ok {
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return 0, false
+	}
+	return userID, true
+}
+
+func (c *ServiceController) getRequestID(r *http.Request) (int, error) {
+	vars := mux.Vars(r)
+	return strconv.Atoi(vars["id"])
+}
+
+func (c *ServiceController) countByStatus(requests []models.ServiceRequest, statusID int) int {
+	count := 0
+	for _, req := range requests {
+		if req.StatusID == statusID {
+			count++
+		}
+	}
+	return count
+}
+
+func (c *ServiceController) getSuccessMessage(r *http.Request) string {
+	switch r.URL.Query().Get("success") {
+	case "created":
+		return "Solicitação criada com sucesso!"
+	case "updated":
+		return "Solicitação atualizada com sucesso!"
+	case "cancelled":
+		return "Solicitação cancelada com sucesso!"
+	default:
+		return ""
+	}
+}
+
+func (c *ServiceController) renderTemplate(w http.ResponseWriter, templatePath string, data interface{}) {
+	tmpl := template.Must(template.ParseFiles(templatePath))
+	tmpl.Execute(w, data)
+}
+
+func (c *ServiceController) handleNotFound(w http.ResponseWriter, err error, message string) {
+	if err.Error() == "sql: no rows in result set" {
+		http.Error(w, message, http.StatusNotFound)
 		return
 	}
+	http.Error(w, "Erro ao buscar dados", http.StatusInternalServerError)
+}
 
-	requests, err := c.ServiceModel.GetAll()
+func (c *ServiceController) handleUpdateError(w http.ResponseWriter, err error, message string) {
+	if err.Error() == "sql: no rows in result set" {
+		http.Error(w, message, http.StatusBadRequest)
+		return
+	}
+	http.Error(w, "Erro ao processar solicitação", http.StatusInternalServerError)
+}
+
+func (c *ServiceController) showServiceRequestForm(w http.ResponseWriter) {
+	serviceTypes, err := c.ServiceModel.GetAllServiceTypes()
 	if err != nil {
-		http.Error(w, "Erro ao buscar solicitações", http.StatusInternalServerError)
+		http.Error(w, "Erro ao carregar tipos de serviço", http.StatusInternalServerError)
 		return
 	}
 
 	data := struct {
-		UserName string
-		Requests []models.ServiceRequest
+		ServiceTypes []models.ServiceType
 	}{
-		UserName: session.Values["user_name"].(string),
-		Requests: requests,
+		ServiceTypes: serviceTypes,
 	}
 
-	tmpl := template.Must(template.ParseFiles("templates/admin_dashboard.html"))
-	tmpl.Execute(w, data)
+	c.renderTemplate(w, "templates/solicitar_servico.html", data)
 }
 
-func (c *ServiceController) UpdateStatus(w http.ResponseWriter, r *http.Request) {
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userType, ok := session.Values["user_type"].(string)
-	if !ok || userType != "gestor" {
-		http.Error(w, "Acesso negado", http.StatusForbidden)
-		return
-	}
-
-	requestID, err := strconv.Atoi(r.FormValue("request_id"))
+func (c *ServiceController) showEditForm(w http.ResponseWriter, r *http.Request, requestID, userID int) {
+	service, err := c.ServiceModel.GetByIDAndUser(requestID, userID)
 	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
+		c.handleNotFound(w, err, "Solicitação não encontrada")
 		return
 	}
 
-	status := r.FormValue("status")
-	validStatuses := map[string]bool{
-		"SOLICITADA": true,
-		"CONFIRMADA": true,
-		"REALIZADA":  true,
-		"CANCELADA":  true,
-	}
-
-	if !validStatuses[status] {
-		http.Error(w, "Status inválido", http.StatusBadRequest)
+	// Apenas solicitações com status SOLICITADA (id=1) podem ser editadas
+	if service.StatusID != 1 {
+		http.Redirect(w, r, "/solicitacao/"+strconv.Itoa(requestID), http.StatusFound)
 		return
 	}
 
-	err = c.ServiceModel.UpdateStatus(requestID, status)
+	serviceTypes, err := c.ServiceModel.GetAllServiceTypes()
 	if err != nil {
-		http.Error(w, "Erro ao atualizar status", http.StatusInternalServerError)
+		http.Error(w, "Erro ao carregar tipos de serviço", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+	data := struct {
+		Service      *models.ServiceRequest
+		ServiceTypes []models.ServiceType
+	}{
+		Service:      service,
+		ServiceTypes: serviceTypes,
+	}
+
+	c.renderTemplate(w, "templates/editar_solicitacao.html", data)
 }

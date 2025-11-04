@@ -20,7 +20,7 @@ func main() {
 	// Setup routes
 	r := routes.SetupRoutes()
 
-	fmt.Println("Servidor rodando na porta 8080")
-	fmt.Println("Acesse: http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	fmt.Println("Servidor rodando na porta 8090")
+	fmt.Println("Acesse: http://localhost:8090")
+	log.Fatal(http.ListenAndServe(":8090", r))
 }
