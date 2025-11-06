@@ -1,0 +1,15 @@
+{{define "scripts"}}
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+<!-- Custom Scripts -->
+{{if .CustomJS}}
+<script src="{{.CustomJS}}"></script>
+{{end}}
+
+{{if .AdditionalScripts}}
+{{range .AdditionalScripts}}
+<script src="{{.}}"></script>
+{{end}}
+{{end}}
+{{end}}

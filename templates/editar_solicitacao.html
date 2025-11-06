@@ -1,216 +1,351 @@
+{{define "editar_solicitacao.html"}}
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Solicitação - Martins Poços</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../static/css/solicitar_servico.css" />
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container">
-            <a class="navbar-brand text-white fw-bold" href="/">
-                <i class="bi bi-droplet-fill me-2"></i>
-                Martins Poços
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link text-white" href="/dashboard/cliente">Dashboard</a>
-                <a class="nav-link text-white" href="/logout">Sair</a>
-            </div>
-        </div>
-    </nav>
+  {{template "head" .}}
+  <body>
+    {{template "navbar" .}}
 
     <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <div class="card">
-                    <div class="card-header text-center">
-                        <h3 class="mb-0">
-                            <i class="bi bi-pencil-square me-2"></i>
-                            Editar Solicitação de Vistoria
-                        </h3>
-                        <p class="mb-0 mt-2 opacity-75">Atualize os dados da sua solicitação</p>
-                    </div>
-                    <div class="card-body p-4">
-                        <form method="POST" id="serviceForm">
-                            
-                            <!-- Dados Pessoais -->
-                            <div class="mb-4">
-                                <h5 class="fw-bold mb-3 text-primary">
-                                    <i class="bi bi-person-fill"></i>
-                                    Dados Pessoais
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-12 mb-3">
-                                        <label for="full_name" class="form-label fw-bold">Nome Completo *</label>
-                                        <input type="text" class="form-control" id="full_name" name="full_name" 
-                                               value="{{.Service.FullName}}" placeholder="Digite seu nome completo" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Service Type Selection -->
-                            <div class="mb-4">
-                                <h5 class="fw-bold mb-3 text-primary">
-                                    <i class="bi bi-gear-fill"></i>
-                                    Tipo de Serviço *
-                                </h5>
-                                <div class="row g-3">
-                                    {{range .ServiceTypes}}
-                                    <div class="col-md-4">
-                                        <label class="service-option d-block {{if eq $.Service.ServiceTypeCode .Code}}selected{{end}}" 
-                                               for="service_{{.Code}}">
-                                            <input type="radio" name="service_type" value="{{.Code}}" id="service_{{.Code}}" 
-                                                   {{if eq $.Service.ServiceTypeCode .Code}}checked{{end}} required>
-                                            <div class="text-center">
-                                                <i class="bi bi-{{.Icon}} service-icon"></i>
-                                                <h6 class="fw-bold">{{.Name}}</h6>
-                                                <p class="text-muted small mb-0">{{.Description}}</p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    {{end}}
-                                </div>
-                            </div>
-
-                            <!-- Endereço da Vistoria -->
-                            <div class="mb-4">
-                                <h5 class="fw-bold mb-3 text-primary">
-                                    <i class="bi bi-geo-alt-fill"></i>
-                                    Local da Vistoria *
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-4 mb-3">
-                                        <label for="cep" class="form-label fw-bold">CEP *</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="cep" name="cep" 
-                                                   value="{{.Service.CEP}}" placeholder="00000-000" maxlength="9" required>
-                                            <button class="btn btn-outline-secondary" type="button" id="searchCepBtn" title="Buscar CEP">
-                                                <i class="bi bi-search"></i>
-                                            </button>
-                                        </div>
-                                        <div id="cepLoading" class="form-text text-primary d-none">
-                                            <i class="bi bi-arrow-repeat animate-spin"></i>
-                                            Buscando CEP...
-                                        </div>
-                                    </div>
-                                    <div class="col-md-8 mb-3">
-                                        <label for="logradouro" class="form-label fw-bold">Logradouro *</label>
-                                        <input type="text" class="form-control" id="logradouro" name="logradouro" 
-                                               value="{{.Service.Logradouro}}" placeholder="Rua, Avenida, etc." required>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label for="numero" class="form-label fw-bold">Número *</label>
-                                        <input type="text" class="form-control" id="numero" name="numero" 
-                                               value="{{.Service.Numero}}" placeholder="123" required>
-                                    </div>
-                                    <div class="col-md-5 mb-3">
-                                        <label for="bairro" class="form-label fw-bold">Bairro *</label>
-                                        <input type="text" class="form-control" id="bairro" name="bairro" 
-                                               value="{{.Service.Bairro}}" placeholder="Nome do bairro" required>
-                                    </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="cidade" class="form-label fw-bold">Cidade *</label>
-                                        <input type="text" class="form-control" id="cidade" name="cidade" 
-                                               value="{{.Service.Cidade}}" placeholder="Nome da cidade" required>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <label for="estado" class="form-label fw-bold">Estado *</label>
-                                        <select class="form-select" id="estado" name="estado" required>
-                                            <option value="">Selecione</option>
-                                            <option value="AC" {{if eq .Service.Estado "AC"}}selected{{end}}>Acre</option>
-                                            <option value="AL" {{if eq .Service.Estado "AL"}}selected{{end}}>Alagoas</option>
-                                            <option value="AP" {{if eq .Service.Estado "AP"}}selected{{end}}>Amapá</option>
-                                            <option value="AM" {{if eq .Service.Estado "AM"}}selected{{end}}>Amazonas</option>
-                                            <option value="BA" {{if eq .Service.Estado "BA"}}selected{{end}}>Bahia</option>
-                                            <option value="CE" {{if eq .Service.Estado "CE"}}selected{{end}}>Ceará</option>
-                                            <option value="DF" {{if eq .Service.Estado "DF"}}selected{{end}}>Distrito Federal</option>
-                                            <option value="ES" {{if eq .Service.Estado "ES"}}selected{{end}}>Espírito Santo</option>
-                                            <option value="GO" {{if eq .Service.Estado "GO"}}selected{{end}}>Goiás</option>
-                                            <option value="MA" {{if eq .Service.Estado "MA"}}selected{{end}}>Maranhão</option>
-                                            <option value="MT" {{if eq .Service.Estado "MT"}}selected{{end}}>Mato Grosso</option>
-                                            <option value="MS" {{if eq .Service.Estado "MS"}}selected{{end}}>Mato Grosso do Sul</option>
-                                            <option value="MG" {{if eq .Service.Estado "MG"}}selected{{end}}>Minas Gerais</option>
-                                            <option value="PA" {{if eq .Service.Estado "PA"}}selected{{end}}>Pará</option>
-                                            <option value="PB" {{if eq .Service.Estado "PB"}}selected{{end}}>Paraíba</option>
-                                            <option value="PR" {{if eq .Service.Estado "PR"}}selected{{end}}>Paraná</option>
-                                            <option value="PE" {{if eq .Service.Estado "PE"}}selected{{end}}>Pernambuco</option>
-                                            <option value="PI" {{if eq .Service.Estado "PI"}}selected{{end}}>Piauí</option>
-                                            <option value="RJ" {{if eq .Service.Estado "RJ"}}selected{{end}}>Rio de Janeiro</option>
-                                            <option value="RN" {{if eq .Service.Estado "RN"}}selected{{end}}>Rio Grande do Norte</option>
-                                            <option value="RS" {{if eq .Service.Estado "RS"}}selected{{end}}>Rio Grande do Sul</option>
-                                            <option value="RO" {{if eq .Service.Estado "RO"}}selected{{end}}>Rondônia</option>
-                                            <option value="RR" {{if eq .Service.Estado "RR"}}selected{{end}}>Roraima</option>
-                                            <option value="SC" {{if eq .Service.Estado "SC"}}selected{{end}}>Santa Catarina</option>
-                                            <option value="SP" {{if eq .Service.Estado "SP"}}selected{{end}}>São Paulo</option>
-                                            <option value="SE" {{if eq .Service.Estado "SE"}}selected{{end}}>Sergipe</option>
-                                            <option value="TO" {{if eq .Service.Estado "TO"}}selected{{end}}>Tocantins</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Agendamento -->
-                            <div class="mb-4">
-                                <h5 class="fw-bold mb-3 text-primary">
-                                    <i class="bi bi-calendar-check"></i>
-                                    Agendamento Preferencial *
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="preferred_date" class="form-label fw-bold">Data Preferencial *</label>
-                                        <input type="date" class="form-control" id="preferred_date" name="preferred_date" 
-                                               value="{{.Service.PreferredDate.Format "2006-01-02"}}" required>
-                                        <div class="form-text">Selecione uma data a partir de hoje</div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="preferred_time" class="form-label fw-bold">Horário Preferencial *</label>
-                                        <input type="time" class="form-control" id="preferred_time" name="preferred_time" 
-                                               value="{{.Service.PreferredTime}}" min="08:00" max="17:00" step="3600" required>
-                                        <div class="form-text">Horário de atendimento: 08:00 às 17:00</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Description -->
-                            <div class="mb-4">
-                                <h5 class="fw-bold mb-3 text-primary">
-                                    <i class="bi bi-file-text"></i>
-                                    Informações Adicionais
-                                </h5>
-                                <label for="description" class="form-label fw-bold">Observações</label>
-                                <textarea class="form-control" id="description" name="description" rows="4" 
-                                    placeholder="Descreva detalhes importantes sobre o local, urgência ou qualquer informação que possa ajudar nossa equipe...">{{.Service.Description}}</textarea>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex justify-content-between flex-wrap gap-2">
-                                <a href="/dashboard/cliente" class="btn btn-outline-secondary">
-                                    <i class="bi bi-arrow-left me-2"></i>
-                                    Voltar ao Dashboard
-                                </a>
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <a href="/solicitacao/{{.Service.ID}}" class="btn btn-outline-primary">
-                                        <i class="bi bi-eye me-2"></i>
-                                        Ver Detalhes
-                                    </a>
-                                    <button type="submit" class="btn btn-primary-custom">
-                                        <i class="bi bi-save me-2"></i>
-                                        Salvar Alterações
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card">
+            <div class="card-header text-center">
+              <h3 class="mb-0 text-white">
+                <i class="bi bi-pencil-square me-2"></i>
+                Editar Solicitação de Vistoria
+              </h3>
+              <p class="mb-0 mt-2 text-white-50">
+                Atualize os dados da sua solicitação
+              </p>
             </div>
+            <div class="card-body p-4">
+              <form method="POST" id="serviceForm">
+                <!-- Dados Pessoais -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-person-fill"></i>
+                    Dados Pessoais
+                  </h5>
+                  <div class="row">
+                    <div class="col-md-12 mb-3">
+                      <label for="full_name" class="form-label fw-bold"
+                        >Nome Completo *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="full_name"
+                        name="full_name"
+                        value="{{.Service.FullName}}"
+                        placeholder="Digite seu nome completo"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Service Type Selection -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-gear-fill"></i>
+                    Tipo de Serviço *
+                  </h5>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label
+                        class="service-option d-block {{if eq .Service.ServiceTypeCode "vistoria"}}selected{{end}}"
+                        for="service_vistoria"
+                      >
+                        <input
+                          type="radio"
+                          name="service_type"
+                          value="vistoria"
+                          id="service_vistoria"
+                          {{if eq .Service.ServiceTypeCode "vistoria"}}checked{{end}}
+                          required
+                        />
+                        <div class="text-center">
+                          <i class="bi bi-search service-icon"></i>
+                          <h6 class="fw-bold">Vistoria</h6>
+                          <p class="text-muted small mb-0">
+                            Avaliação do local
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                    <div class="col-md-4">
+                      <label
+                        class="service-option d-block {{if eq .Service.ServiceTypeCode "perfuracao"}}selected{{end}}"
+                        for="service_perfuracao"
+                      >
+                        <input
+                          type="radio"
+                          name="service_type"
+                          value="perfuracao"
+                          id="service_perfuracao"
+                          {{if eq .Service.ServiceTypeCode "perfuracao"}}checked{{end}}
+                          required
+                        />
+                        <div class="text-center">
+                          <i class="bi bi-arrow-down-circle service-icon"></i>
+                          <h6 class="fw-bold">Perfuração</h6>
+                          <p class="text-muted small mb-0">
+                            Perfuração de poço
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                    <div class="col-md-4">
+                      <label
+                        class="service-option d-block {{if eq .Service.ServiceTypeCode "manutencao"}}selected{{end}}"
+                        for="service_manutencao"
+                      >
+                        <input
+                          type="radio"
+                          name="service_type"
+                          value="manutencao"
+                          id="service_manutencao"
+                          {{if eq .Service.ServiceTypeCode "manutencao"}}checked{{end}}
+                          required
+                        />
+                        <div class="text-center">
+                          <i class="bi bi-tools service-icon"></i>
+                          <h6 class="fw-bold">Manutenção</h6>
+                          <p class="text-muted small mb-0">
+                            Reparo e manutenção
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Endereço da Vistoria -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    Local da Vistoria *
+                  </h5>
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="cep" class="form-label fw-bold">CEP *</label>
+                      <div class="input-group">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="cep"
+                          name="cep"
+                          value="{{.Service.CEP}}"
+                          placeholder="00000-000"
+                          maxlength="9"
+                          required
+                        />
+                        <button
+                          class="btn btn-outline-secondary"
+                          type="button"
+                          id="searchCepBtn"
+                          title="Buscar CEP"
+                        >
+                          <i class="bi bi-search text-primary"></i>
+                        </button>
+                      </div>
+                      <div
+                        id="cepLoading"
+                        class="form-text text-primary d-none"
+                      >
+                        <i class="bi bi-arrow-repeat animate-spin"></i>
+                        Buscando CEP...
+                      </div>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                      <label for="logradouro" class="form-label fw-bold"
+                        >Logradouro *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="logradouro"
+                        name="logradouro"
+                        value="{{.Service.Logradouro}}"
+                        placeholder="Rua, Avenida, etc."
+                        required
+                      />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label for="numero" class="form-label fw-bold"
+                        >Número *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="numero"
+                        name="numero"
+                        value="{{.Service.Numero}}"
+                        placeholder="123"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-5 mb-3">
+                      <label for="bairro" class="form-label fw-bold"
+                        >Bairro *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="bairro"
+                        name="bairro"
+                        value="{{.Service.Bairro}}"
+                        placeholder="Nome do bairro"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="cidade" class="form-label fw-bold"
+                        >Cidade *</label
+                      >
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="cidade"
+                        name="cidade"
+                        value="{{.Service.Cidade}}"
+                        placeholder="Nome da cidade"
+                        required
+                      />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label for="estado" class="form-label fw-bold"
+                        >Estado *</label
+                      >
+                      <select
+                        class="form-control"
+                        id="estado"
+                        name="estado"
+                        required
+                      >
+                        <option value="">Selecione</option>
+                        <option value="AC" {{if eq .Service.Estado "AC"}}selected{{end}}>Acre</option>
+                        <option value="AL" {{if eq .Service.Estado "AL"}}selected{{end}}>Alagoas</option>
+                        <option value="AP" {{if eq .Service.Estado "AP"}}selected{{end}}>Amapá</option>
+                        <option value="AM" {{if eq .Service.Estado "AM"}}selected{{end}}>Amazonas</option>
+                        <option value="BA" {{if eq .Service.Estado "BA"}}selected{{end}}>Bahia</option>
+                        <option value="CE" {{if eq .Service.Estado "CE"}}selected{{end}}>Ceará</option>
+                        <option value="DF" {{if eq .Service.Estado "DF"}}selected{{end}}>Distrito Federal</option>
+                        <option value="ES" {{if eq .Service.Estado "ES"}}selected{{end}}>Espírito Santo</option>
+                        <option value="GO" {{if eq .Service.Estado "GO"}}selected{{end}}>Goiás</option>
+                        <option value="MA" {{if eq .Service.Estado "MA"}}selected{{end}}>Maranhão</option>
+                        <option value="MT" {{if eq .Service.Estado "MT"}}selected{{end}}>Mato Grosso</option>
+                        <option value="MS" {{if eq .Service.Estado "MS"}}selected{{end}}>Mato Grosso do Sul</option>
+                        <option value="MG" {{if eq .Service.Estado "MG"}}selected{{end}}>Minas Gerais</option>
+                        <option value="PA" {{if eq .Service.Estado "PA"}}selected{{end}}>Pará</option>
+                        <option value="PB" {{if eq .Service.Estado "PB"}}selected{{end}}>Paraíba</option>
+                        <option value="PR" {{if eq .Service.Estado "PR"}}selected{{end}}>Paraná</option>
+                        <option value="PE" {{if eq .Service.Estado "PE"}}selected{{end}}>Pernambuco</option>
+                        <option value="PI" {{if eq .Service.Estado "PI"}}selected{{end}}>Piauí</option>
+                        <option value="RJ" {{if eq .Service.Estado "RJ"}}selected{{end}}>Rio de Janeiro</option>
+                        <option value="RN" {{if eq .Service.Estado "RN"}}selected{{end}}>Rio Grande do Norte</option>
+                        <option value="RS" {{if eq .Service.Estado "RS"}}selected{{end}}>Rio Grande do Sul</option>
+                        <option value="RO" {{if eq .Service.Estado "RO"}}selected{{end}}>Rondônia</option>
+                        <option value="RR" {{if eq .Service.Estado "RR"}}selected{{end}}>Roraima</option>
+                        <option value="SC" {{if eq .Service.Estado "SC"}}selected{{end}}>Santa Catarina</option>
+                        <option value="SP" {{if eq .Service.Estado "SP"}}selected{{end}}>São Paulo</option>
+                        <option value="SE" {{if eq .Service.Estado "SE"}}selected{{end}}>Sergipe</option>
+                        <option value="TO" {{if eq .Service.Estado "TO"}}selected{{end}}>Tocantins</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Agendamento -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-calendar-check"></i>
+                    Agendamento Preferencial *
+                  </h5>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="preferred_date" class="form-label fw-bold"
+                        >Data Preferencial *</label
+                      >
+                      <input
+                        type="date"
+                        class="form-control"
+                        id="preferred_date"
+                        name="preferred_date"
+                        value="{{.Service.PreferredDate.Format "2006-01-02"}}"
+                        required
+                      />
+                      <div class="form-text">
+                        Selecione uma data a partir de hoje
+                      </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="preferred_time" class="form-label fw-bold"
+                        >Horário Preferencial *</label
+                      >
+                      <input
+                        type="time"
+                        class="form-control"
+                        id="preferred_time"
+                        name="preferred_time"
+                        value="{{slice .Service.PreferredTime 0 5}}"
+                        min="08:00"
+                        max="17:00"
+                        step="3600"
+                        required
+                      />
+                      <div class="form-text">
+                        Horário de atendimento: 08:00 às 17:00
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary">
+                    <i class="bi bi-file-text"></i>
+                    Informações Adicionais
+                  </h5>
+                  <label for="description" class="form-label fw-bold"
+                    >Observações</label
+                  >
+                  <textarea
+                    class="form-control"
+                    id="description"
+                    name="description"
+                    rows="4"
+                    placeholder="Descreva detalhes importantes sobre o local, urgência ou qualquer informação que possa ajudar nossa equipe..."
+                  >{{.Service.Description}}</textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between flex-wrap gap-2">
+                    <a href="/dashboard/cliente" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Voltar ao Dashboard
+                  </a>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <a href="/solicitacao/{{.Service.ID}}" class="btn btn-outline-primary">
+                    
+                      <i class="bi bi-eye me-2"></i>
+                      Ver Detalhes
+                    </a>
+                    <button type="submit" class="btn btn-primary-custom">
+                      <i class="bi bi-save me-2"></i>
+                      Salvar Alterações
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="../../static/js/solicitar_servico.js"></script>
-</body>
+    {{template "footer" .}}
+    {{template "scripts" .}}
+  </body>
 </html>
+{{end}}
