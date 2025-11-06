@@ -1,0 +1,76 @@
+{{define "footer"}}
+<!-- Footer Component -->
+<footer class="footer-custom mt-5 py-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4 mb-3 mb-md-0">
+        <h5 class="text-white fw-bold mb-3">
+          <i class="bi bi-droplet-fill me-2"></i>
+          Martins Poços
+        </h5>
+        <p class="text-white-50 small">
+          Soluções completas em perfuração, manutenção e vistoria de poços artesianos.
+        </p>
+      </div>
+      <div class="col-md-4 mb-3 mb-md-0">
+        <h6 class="text-white fw-bold mb-3">Links Rápidos</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2">
+            <a href="/" class="text-white-50 text-decoration-none">
+              <i class="bi bi-house-door me-1"></i>
+              Início
+            </a>
+          </li>
+          <li class="mb-2">
+            <a href="/dashboard/cliente" class="text-white-50 text-decoration-none">
+              <i class="bi bi-speedometer2 me-1"></i>
+              Dashboard
+            </a>
+          </li>
+          <li class="mb-2">
+            <a href="/solicitar-servico" class="text-white-50 text-decoration-none">
+              <i class="bi bi-plus-circle me-1"></i>
+              Nova Solicitação
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="col-md-4">
+        <h6 class="text-white fw-bold mb-3">Contato</h6>
+        <ul class="list-unstyled">
+          <li class="mb-2">
+            <i class="bi bi-telephone text-white-50 me-2"></i>
+            <span class="text-white-50">(34) 9999-9999</span>
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-envelope text-white-50 me-2"></i>
+            <span class="text-white-50">contato@martinspocos.com</span>
+          </li>
+          <li class="mb-2">
+            <i class="bi bi-geo-alt text-white-50 me-2"></i>
+            <span class="text-white-50">Monte Carmelo - MG</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <hr class="border-white-50 my-4">
+    <div class="text-center">
+      <p class="text-white-50 small mb-0">
+        &copy; {{.CurrentYear}} Martins Poços. Todos os direitos reservados.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+.footer-custom {
+  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+  margin-top: auto;
+}
+
+.footer-custom a:hover {
+  color: #ffffff !important;
+  transition: color 0.3s ease;
+}
+</style>
+{{end}}

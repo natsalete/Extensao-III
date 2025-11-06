@@ -1,33 +1,9 @@
+{{define "cliente_dashboard.html"}}
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Cliente - Martins Poços</title>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="../static/css/cliente_dashboard.css" />
-  </head>
+  {{template "head" .}}
   <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-      <div class="container">
-        <a class="navbar-brand text-white fw-bold" href="/">
-          <i class="bi bi-droplet-fill me-2"></i>
-          Martins Poços
-        </a>
-        <div class="navbar-nav ms-auto">
-          <span class="navbar-text text-white me-3"> Olá, {{.UserName}}! </span>
-          <a class="nav-link text-white" href="/logout">Sair</a>
-        </div>
-      </div>
-    </nav>
+    {{template "navbar" .}}
 
     <div class="container mt-4">
       <!-- Success Message -->
@@ -261,7 +237,8 @@
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="../static/js/cliente_dashboard.js"></script>
+    {{template "footer" .}}
+    {{template "scripts" .}}
   </body>
 </html>
+{{end}}
