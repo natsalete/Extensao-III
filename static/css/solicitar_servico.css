@@ -1,58 +1,3 @@
-/* Reset e Base */
-body {
-  background-color: #f5f7fa;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
-/* Navbar */
-.navbar-custom {
-  background: #2563eb;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1rem 0;
-}
-
-.navbar-brand {
-  font-size: 1.25rem;
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-}
-
-/* Card Principal */
-.card {
-  border: none;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  background: white;
-  margin-bottom: 2rem;
-}
-
-.card-header {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1.5rem;
-}
-
-.card-header h3 {
-  color: #1f2937;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.card-header p {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin: 0.5rem 0 0 0;
-}
-
-.card-body {
-  padding: 2rem;
-}
-
 /* Seções do Formulário */
 .mb-4 h5 {
   color: #1f2937;
@@ -71,34 +16,6 @@ body {
   font-size: 1.1rem;
 }
 
-/* Labels */
-.form-label {
-  color: #374151;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-/* Inputs */
-.form-control,
-.form-select {
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  transition: all 0.15s ease;
-}
-
-.form-control:focus,
-.form-select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-  outline: none;
-}
-
-.form-control::placeholder {
-  color: #9ca3af;
-}
 
 /* Input Group */
 .input-group .btn {
@@ -177,72 +94,7 @@ body {
   line-height: 1.4;
 }
 
-/* Buttons */
-.btn {
-  border-radius: 6px;
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: none;
-}
-
-.btn i {
-  font-size: 1rem;
-}
-
-.btn-primary-custom {
-  background: #2563eb;
-  color: white;
-}
-
-.btn-primary-custom:hover {
-  background: #1d4ed8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
-}
-
-.btn-primary-custom:disabled {
-  background: #93c5fd;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-outline-secondary {
-  border: 1px solid #d1d5db !important;
-  color: #374151;
-  background: white;
-}
-
-.btn-outline-secondary:hover {
-  background: #f9fafb;
-  border-color: #9ca3af !important;
-  color: #1f2937;
-}
-
-.btn-outline-primary {
-  border: 1px solid #2563eb !important;
-  color: #2563eb;
-  background: white;
-}
-
-.btn-outline-primary:hover {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
 /* Alert */
-.alert-info {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
-  color: #1e40af;
-  padding: 1rem;
-}
-
 .alert-info i {
   flex-shrink: 0;
 }
@@ -250,17 +102,6 @@ body {
 /* Notificações */
 .notification-alert {
   animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
 }
 
 /* Loading */
@@ -277,26 +118,6 @@ body {
   display: none !important;
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-  display: inline-block;
-}
-
-/* Form Text */
-.form-text {
-  color: #6b7280;
-  font-size: 0.8125rem;
-  margin-top: 0.25rem;
-}
 
 /* Validação */
 .is-invalid {
@@ -323,9 +144,6 @@ body {
     padding: 1.25rem;
   }
 
-  .card-header h3 {
-    font-size: 1.25rem;
-  }
 
   .service-option {
     min-height: 130px;
