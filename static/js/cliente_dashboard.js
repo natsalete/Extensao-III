@@ -8,6 +8,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }, 5000);
+
+  // Inicializar tooltips se houver
+  initializeTooltips();
+
+  // Adicionar animação aos cards de estatísticas
+  animateStatCards();
 });
 
 function cancelarSolicitacao(id) {
@@ -25,14 +31,18 @@ function cancelarSolicitacao(id) {
   }
 }
 
+function clearFilters() {
+  window.location.href = "/dashboard/cliente";
+}
+
 function showNotification(message, type = "info") {
   const alertClass = {
-    success: 'alert-success',
-    error: 'alert-danger',
-    warning: 'alert-warning',
-    info: 'alert-info'
-  }[type] || 'alert-info';
-  
+    success: "alert-success",
+    error: "alert-danger",
+    warning: "alert-warning",
+    info: "alert-info",
+  }[type] || "alert-info";
+
   const iconMap = {
     success: "bi-check-circle-fill",
     error: "bi-x-circle-fill",
@@ -42,7 +52,8 @@ function showNotification(message, type = "info") {
 
   const alert = document.createElement("div");
   alert.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
-  alert.style.cssText = "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
+  alert.style.cssText =
+    "top: 20px; right: 20px; z-index: 9999; min-width: 300px;";
   alert.innerHTML = `
     <div class="d-flex align-items-center">
       <i class="bi ${iconMap[type]} me-2"></i>
@@ -59,3 +70,81 @@ function showNotification(message, type = "info") {
     }
   }, 5000);
 }
+
+function initializeTooltips() {
+  if (typeof bootstrap !== "undefined") {
+    const tooltipTriggerList = [].slice.call(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    );
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  }
+}
+
+function animateStatCards() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = "0";
+          entry.target.style.transform = "translateY(20px)";
+
+          setTimeout(() => {
+            entry.target.style.transition = "all 0.5s ease";
+            entry.target.style.opacity = "1";
+            entry.target.style.transform = "translateY(0)";
+          }, 100);
+
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1 }
+  );
+
+  document.querySelectorAll(".service-card").forEach((card, index) => {
+    card.style.transitionDelay = `${index * 0.1}s`;
+    observer.observe(card);
+  });
+}
+
+// Função para highlight dos filtros ativos
+function highlightActiveFilters() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const statusFilter = urlParams.get("status");
+  const serviceTypeFilter = urlParams.get("service_type");
+
+  if (statusFilter || serviceTypeFilter) {
+    const filterSection = document.querySelector(".filter-section");
+    if (filterSection) {
+      filterSection.classList.add("active-filters");
+    }
+  }
+}
+
+// Executar ao carregar
+highlightActiveFilters();
+
+// Prevenir múltiplos submits do formulário
+document.addEventListener("submit", function (e) {
+  const form = e.target;
+  const submitButton = form.querySelector('button[type="submit"]');
+
+  if (submitButton && !submitButton.disabled) {
+    submitButton.disabled = true;
+    submitButton.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span>Processando...';
+
+    // Reabilitar após 3 segundos caso haja erro
+    setTimeout(() => {
+      submitButton.disabled = false;
+      submitButton.innerHTML = submitButton.dataset.originalText || "Enviar";
+    }, 3000);
+  }
+});
+
+// Salvar texto original dos botões
+document.querySelectorAll('button[type="submit"]').forEach((btn) => {
+  btn.dataset.originalText = btn.innerHTML;
+});

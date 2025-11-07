@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"fmt"
+	// "fmt"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -33,17 +33,62 @@ type PageData struct {
 	Data              interface{}
 }
 
-// ClienteDashboard - Dashboard do cliente
+// ClienteDashboard - Dashboard do cliente com filtros e paginação
 func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Request) {
 	userID, ok := c.getUserID(w, r)
 	if !ok {
 		return
 	}
 
-	requests, err := c.ServiceModel.GetByUserID(userID)
+	// Capturar parâmetros de filtro e paginação
+	statusFilter := r.URL.Query().Get("status")
+	serviceTypeFilter := r.URL.Query().Get("service_type")
+	pageStr := r.URL.Query().Get("page")
+	
+	page := 1
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	
+	pageSize := 5
+	offset := (page - 1) * pageSize
+
+	// Buscar solicitações com filtros
+	requests, totalCount, err := c.ServiceModel.GetByUserIDWithFilters(
+		userID, 
+		statusFilter, 
+		serviceTypeFilter, 
+		pageSize, 
+		offset,
+	)
 	if err != nil {
 		http.Error(w, "Erro ao buscar solicitações", http.StatusInternalServerError)
 		return
+	}
+
+	// Calcular total de páginas
+	totalPages := (totalCount + pageSize - 1) / pageSize
+
+	// Buscar tipos de serviço para o filtro
+	serviceTypes, err := c.ServiceModel.GetAllServiceTypes()
+	if err != nil {
+		http.Error(w, "Erro ao carregar tipos de serviço", http.StatusInternalServerError)
+		return
+	}
+
+	// Buscar status para o filtro
+	statuses, err := c.ServiceModel.GetAllStatuses()
+	if err != nil {
+		http.Error(w, "Erro ao carregar status", http.StatusInternalServerError)
+		return
+	}
+
+	// Contar por status (total sem filtros para os cards)
+	allRequests, err := c.ServiceModel.GetByUserID(userID)
+	if err != nil {
+		allRequests = []models.ServiceRequest{}
 	}
 
 	session, _ := config.GetSessionStore().Get(r, "session")
@@ -52,28 +97,46 @@ func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Requ
 	data := struct {
 		UserName          string
 		Requests          []models.ServiceRequest
+		ServiceTypes      []models.ServiceType
+		Statuses          []models.RequestStatus
 		PendingCount      int
 		ConfirmedCount    int
 		CompletedCount    int
 		CanceledCount     int
+		CurrentPage       int
+		TotalPages        int
+		TotalCount        int
+		HasPrevPage       bool
+		HasNextPage       bool
+		StatusFilter      string
+		ServiceTypeFilter string
 		SuccessMsg        string
 		PageTitle         string
 		CustomCSS         string
 		CustomJS          string
-		AdditionalScripts []string 
+		AdditionalScripts []string
 		CurrentYear       int
 	}{
 		UserName:          userName,
 		Requests:          requests,
-		PendingCount:      c.countByStatus(requests, 1),
-		ConfirmedCount:    c.countByStatus(requests, 2),
-		CompletedCount:    c.countByStatus(requests, 3),
-		CanceledCount:     c.countByStatus(requests, 4),
+		ServiceTypes:      serviceTypes,
+		Statuses:          statuses,
+		PendingCount:      c.countByStatus(allRequests, 1),
+		ConfirmedCount:    c.countByStatus(allRequests, 2),
+		CompletedCount:    c.countByStatus(allRequests, 3),
+		CanceledCount:     c.countByStatus(allRequests, 4),
+		CurrentPage:       page,
+		TotalPages:        totalPages,
+		TotalCount:        totalCount,
+		HasPrevPage:       page > 1,
+		HasNextPage:       page < totalPages,
+		StatusFilter:      statusFilter,
+		ServiceTypeFilter: serviceTypeFilter,
 		SuccessMsg:        c.getSuccessMessage(r),
 		PageTitle:         "Dashboard Cliente",
 		CustomCSS:         "../static/css/cliente_dashboard.css",
 		CustomJS:          "../static/js/cliente_dashboard.js",
-		AdditionalScripts: []string{},  
+		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
 	}
 
@@ -145,21 +208,21 @@ func (c *ServiceController) VerSolicitacao(w http.ResponseWriter, r *http.Reques
 	userName := session.Values["user_name"].(string)
 
 	data := struct {
-		Service     *models.ServiceRequest
-		UserName    string
-		PageTitle   string
-		CustomCSS   string
-		CustomJS    string
-		CurrentYear int
-		AdditionalScripts []string 
+		Service           *models.ServiceRequest
+		UserName          string
+		PageTitle         string
+		CustomCSS         string
+		CustomJS          string
+		CurrentYear       int
+		AdditionalScripts []string
 	}{
-		Service:     service,
-		UserName:    userName,
-		PageTitle:   "Detalhes da Solicitação",
-		CustomCSS:   "../static/css/ver_solicitacao.css",
-		CustomJS:    "../static/js/ver_solicitacao.js",
-		AdditionalScripts: []string{},  
-		CurrentYear: time.Now().Year(),
+		Service:           service,
+		UserName:          userName,
+		PageTitle:         "Detalhes da Solicitação",
+		CustomCSS:         "../static/css/ver_solicitacao.css",
+		CustomJS:          "../static/js/ver_solicitacao.js",
+		AdditionalScripts: []string{},
+		CurrentYear:       time.Now().Year(),
 	}
 
 	c.renderTemplate(w, []string{
@@ -232,37 +295,25 @@ func (c *ServiceController) getSuccessMessage(r *http.Request) string {
 }
 
 func (c *ServiceController) renderTemplate(w http.ResponseWriter, templatePaths []string, data interface{}) {
-	fmt.Println("\n=== DEBUG renderTemplate ===")
-	fmt.Println("Template paths:")
-	for i, path := range templatePaths {
-		fmt.Printf("  [%d] %s\n", i, path)
-	}
+	// Criar template com funções auxiliares
+	tmpl := template.New("").Funcs(GetTemplateFuncs())
 	
-	tmpl, err := template.ParseFiles(templatePaths...)
+	// Parsear todos os templates
+	var err error
+	tmpl, err = tmpl.ParseFiles(templatePaths...)
 	if err != nil {
-		fmt.Println(" ERRO ao parsear templates:", err)
 		http.Error(w, "Erro ao carregar template: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("✅ Templates parseados com sucesso")
-	
-	// Pega o nome do arquivo base (último da lista)
+
+	// Pegar nome do arquivo base
 	baseName := filepath.Base(templatePaths[len(templatePaths)-1])
-	fmt.Println("Base template name:", baseName)
-	
-	// Debug: listar todos os templates parseados
-	fmt.Println("Templates disponíveis:")
-	for _, t := range tmpl.Templates() {
-		fmt.Printf("  - %s\n", t.Name())
-	}
-	
-	fmt.Println("Tentando executar template:", baseName)
+
+	// Executar template
 	if err := tmpl.ExecuteTemplate(w, baseName, data); err != nil {
-		fmt.Println(" ERRO ao executar template:", err)
 		http.Error(w, "Erro ao renderizar template: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("✅ Template executado com sucesso")
 }
 
 func (c *ServiceController) handleNotFound(w http.ResponseWriter, err error, message string) {
@@ -292,21 +343,21 @@ func (c *ServiceController) showServiceRequestForm(w http.ResponseWriter, r *htt
 	userName := session.Values["user_name"].(string)
 
 	data := struct {
-		ServiceTypes []models.ServiceType
-		UserName     string
-		PageTitle    string
-		CustomCSS    string
-		CustomJS     string
-		CurrentYear  int
-		AdditionalScripts []string 
+		ServiceTypes      []models.ServiceType
+		UserName          string
+		PageTitle         string
+		CustomCSS         string
+		CustomJS          string
+		CurrentYear       int
+		AdditionalScripts []string
 	}{
-		ServiceTypes: serviceTypes,
-		UserName:     userName,
-		PageTitle:    "Solicitar Serviço",
-		CustomCSS:    "../static/css/solicitar_servico.css",
-		CustomJS:     "../static/js/solicitar_servico.js",
-		AdditionalScripts: []string{},  
-		CurrentYear:  time.Now().Year(),
+		ServiceTypes:      serviceTypes,
+		UserName:          userName,
+		PageTitle:         "Solicitar Serviço",
+		CustomCSS:         "../static/css/solicitar_servico.css",
+		CustomJS:          "../static/js/solicitar_servico.js",
+		AdditionalScripts: []string{},
+		CurrentYear:       time.Now().Year(),
 	}
 
 	c.renderTemplate(w, []string{
@@ -319,38 +370,28 @@ func (c *ServiceController) showServiceRequestForm(w http.ResponseWriter, r *htt
 }
 
 func (c *ServiceController) showEditForm(w http.ResponseWriter, r *http.Request, requestID, userID int) {
-	fmt.Println("=== DEBUG showEditForm ===")
-	fmt.Println("RequestID:", requestID, "UserID:", userID)
-	
 	service, err := c.ServiceModel.GetByIDAndUser(requestID, userID)
 	if err != nil {
-		fmt.Println("Erro ao buscar service:", err)
 		c.handleNotFound(w, err, "Solicitação não encontrada")
 		return
 	}
-	fmt.Println("Service encontrado:", service.ID)
 
 	if service.StatusID != 1 {
-		fmt.Println("Status não é 1, redirecionando. StatusID:", service.StatusID)
 		http.Redirect(w, r, "/solicitacao/"+strconv.Itoa(requestID), http.StatusFound)
 		return
 	}
 
 	serviceTypes, err := c.ServiceModel.GetAllServiceTypes()
 	if err != nil {
-		fmt.Println("Erro ao buscar service types:", err)
 		http.Error(w, "Erro ao carregar tipos de serviço", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Service types carregados:", len(serviceTypes))
 
 	session, _ := config.GetSessionStore().Get(r, "session")
 	userName, ok := session.Values["user_name"].(string)
 	if !ok {
-		fmt.Println("Erro: user_name não encontrado na sessão")
 		userName = "Usuário"
 	}
-	fmt.Println("UserName:", userName)
 
 	data := struct {
 		Service           *models.ServiceRequest
@@ -360,19 +401,18 @@ func (c *ServiceController) showEditForm(w http.ResponseWriter, r *http.Request,
 		CustomCSS         string
 		CustomJS          string
 		CurrentYear       int
-		AdditionalScripts []string 
+		AdditionalScripts []string
 	}{
 		Service:           service,
 		ServiceTypes:      serviceTypes,
 		UserName:          userName,
 		PageTitle:         "Editar Solicitação",
-		CustomCSS:         "/static/css/solicitar_servico.css",      
-		CustomJS:          "/static/js/solicitar_servico.js",       
+		CustomCSS:         "/static/css/solicitar_servico.css",
+		CustomJS:          "/static/js/solicitar_servico.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
 	}
 
-	fmt.Println("Chamando renderTemplate...")
 	c.renderTemplate(w, []string{
 		"templates/components/head.html",
 		"templates/components/navbar.html",
@@ -380,5 +420,4 @@ func (c *ServiceController) showEditForm(w http.ResponseWriter, r *http.Request,
 		"templates/components/scripts.html",
 		"templates/editar_solicitacao.html",
 	}, data)
-	fmt.Println("renderTemplate concluído")
 }
