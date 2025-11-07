@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"strconv"
 	"time"
 	
 	"martins-pocos/constants"
@@ -311,6 +312,10 @@ func (m *ServiceModel) GetAll() ([]ServiceRequest, error) {
 	return requests, nil
 }
 
+func (m *ServiceModel) GetAllStatuses() ([]RequestStatus, error) {
+	return m.GetAllRequestStatus()
+}
+
 func (m *ServiceModel) GetByID(id int) (*ServiceRequest, error) {
 	service := &ServiceRequest{}
 	var preferredTime sql.NullString
@@ -378,3 +383,86 @@ func (m *ServiceModel) GetByIDAndUser(id, userID int) (*ServiceRequest, error) {
 	
 	return service, nil
 }
+
+// ==================== Additional Query Methods ====================
+
+// GetByUserIDWithFilters busca solicitações com filtros e paginação
+func (m *ServiceModel) GetByUserIDWithFilters(userID int, statusFilter, serviceTypeFilter string, limit, offset int) ([]ServiceRequest, int, error) {
+	// Query base
+	baseQuery := `
+		FROM service_requests sr
+		JOIN service_types st ON sr.service_type_id = st.id
+		JOIN request_status rs ON sr.status_id = rs.id
+		WHERE sr.user_id = $1`
+	
+	// Construir condições de filtro
+	args := []interface{}{userID}
+	argPos := 2
+	
+	if statusFilter != "" {
+		baseQuery += " AND rs.code = $" + strconv.Itoa(argPos)
+		args = append(args, statusFilter)
+		argPos++
+	}
+	
+	if serviceTypeFilter != "" {
+		baseQuery += " AND st.code = $" + strconv.Itoa(argPos)
+		args = append(args, serviceTypeFilter)
+		argPos++
+	}
+	
+	// Contar total de registros
+	countQuery := "SELECT COUNT(*) " + baseQuery
+	var totalCount int
+	err := m.DB.QueryRow(countQuery, args...).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, err
+	}
+	
+	// Query completa com dados
+	selectQuery := `
+		SELECT sr.id, sr.full_name, sr.service_type_id, st.code, st.name, st.icon,
+		       sr.description, sr.cep, sr.logradouro, sr.numero, 
+		       sr.bairro, sr.cidade, sr.estado, sr.preferred_date, sr.preferred_time,
+		       sr.status_id, rs.code, rs.name, rs.color_class,
+		       sr.created_at, sr.updated_at
+		` + baseQuery + `
+		ORDER BY sr.created_at DESC
+		LIMIT $` + strconv.Itoa(argPos) + ` OFFSET $` + strconv.Itoa(argPos+1)
+	
+	args = append(args, limit, offset)
+	
+	rows, err := m.DB.Query(selectQuery, args...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	
+	var requests []ServiceRequest
+	for rows.Next() {
+		var req ServiceRequest
+		var preferredTime sql.NullString
+		
+		err := rows.Scan(
+			&req.ID, &req.FullName, &req.ServiceTypeID, &req.ServiceTypeCode, 
+			&req.ServiceTypeName, &req.ServiceTypeIcon, &req.Description,
+			&req.CEP, &req.Logradouro, &req.Numero, &req.Bairro,
+			&req.Cidade, &req.Estado, &req.PreferredDate, &preferredTime,
+			&req.StatusID, &req.StatusCode, &req.StatusName, &req.StatusColor,
+			&req.CreatedAt, &req.UpdatedAt,
+		)
+		if err != nil {
+			return nil, 0, err
+		}
+		
+		if preferredTime.Valid {
+			req.PreferredTime = preferredTime.String
+		}
+		
+		requests = append(requests, req)
+	}
+	
+	return requests, totalCount, nil
+}
+
+

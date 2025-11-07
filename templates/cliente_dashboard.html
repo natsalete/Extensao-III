@@ -11,11 +11,7 @@
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         {{.SuccessMsg}}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
       {{end}}
 
@@ -25,8 +21,7 @@
           <div class="col-md-8">
             <h2 class="mb-3">Bem-vindo ao seu painel, {{.UserName}}!</h2>
             <p class="mb-0">
-              Gerencie suas solicitações de vistoria e acompanhe o andamento dos
-              seus projetos.
+              Gerencie suas solicitações de vistoria e acompanhe o andamento dos seus projetos.
             </p>
           </div>
           <div class="col-md-4 text-end">
@@ -43,10 +38,7 @@
         <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
-              <i
-                class="bi bi-clock-fill text-warning mb-3"
-                style="font-size: 48px"
-              ></i>
+              <i class="bi bi-clock-fill text-warning mb-3" style="font-size: 48px"></i>
               <h5 class="card-title">Solicitadas</h5>
               <h3 class="text-warning">{{.PendingCount}}</h3>
             </div>
@@ -55,10 +47,7 @@
         <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
-              <i
-                class="bi bi-calendar-check-fill text-info mb-3"
-                style="font-size: 48px"
-              ></i>
+              <i class="bi bi-calendar-check-fill text-info mb-3" style="font-size: 48px"></i>
               <h5 class="card-title">Confirmadas</h5>
               <h3 class="text-info">{{.ConfirmedCount}}</h3>
             </div>
@@ -67,10 +56,7 @@
         <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
-              <i
-                class="bi bi-check-circle-fill text-success mb-3"
-                style="font-size: 48px"
-              ></i>
+              <i class="bi bi-check-circle-fill text-success mb-3" style="font-size: 48px"></i>
               <h5 class="card-title">Realizadas</h5>
               <h3 class="text-success">{{.CompletedCount}}</h3>
             </div>
@@ -79,10 +65,7 @@
         <div class="col-md-3">
           <div class="card service-card">
             <div class="card-body text-center">
-              <i
-                class="bi bi-x-circle-fill text-danger mb-3"
-                style="font-size: 48px"
-              ></i>
+              <i class="bi bi-x-circle-fill text-danger mb-3" style="font-size: 48px"></i>
               <h5 class="card-title">Canceladas</h5>
               <h3 class="text-danger">{{.CanceledCount}}</h3>
             </div>
@@ -99,7 +82,57 @@
           </h4>
         </div>
         <div class="card-body">
+          <!-- Filtros -->
+          <div class="filter-section mb-4">
+            <form method="GET" action="/dashboard/cliente" id="filterForm">
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">
+                    <i class="bi bi-funnel-fill me-1"></i>
+                    Filtrar por Status
+                  </label>
+                  <select name="status" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Todos os Status</option>
+                    {{range .Statuses}}
+                    <option value="{{.Code}}" {{if eq $.StatusFilter .Code}}selected{{end}}>
+                      {{.Name}}
+                    </option>
+                    {{end}}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">
+                    <i class="bi bi-gear-fill me-1"></i>
+                    Filtrar por Tipo de Serviço
+                  </label>
+                  <select name="service_type" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Todos os Tipos</option>
+                    {{range .ServiceTypes}}
+                    <option value="{{.Code}}" {{if eq $.ServiceTypeFilter .Code}}selected{{end}}>
+                      {{.Name}}
+                    </option>
+                    {{end}}
+                  </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                  <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Limpar Filtros
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
           {{if .Requests}}
+          <!-- Resultados com contagem -->
+          <div class="results-info mb-3">
+            <p class="text-muted mb-0">
+              <i class="bi bi-info-circle me-1"></i>
+              Mostrando {{len .Requests}} de {{.TotalCount}} solicitação(ões)
+            </p>
+          </div>
+
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
@@ -133,47 +166,29 @@
                   <td>
                     <div class="datetime-cell">
                       <i class="bi bi-calendar3 me-1"></i>
-                      <span class="date-text"
-                        >{{.PreferredDate.Format "02/01/2006"}}</span
-                      >
+                      <span class="date-text">{{.PreferredDate.Format "02/01/2006"}}</span>
                       <br />
                       <i class="bi bi-clock me-1"></i>
-                      <strong class="time-text"
-                        >{{slice .PreferredTime 11 16}}</strong
-                      >
+                      <strong class="time-text">{{slice .PreferredTime 11 16}}</strong>
                     </div>
                   </td>
                   <td>
-                    <span class="status-badge {{.StatusColor}}"
-                      >{{.StatusName}}</span
-                    >
+                    <span class="status-badge {{.StatusColor}}">{{.StatusName}}</span>
                   </td>
                   <td class="small">
                     {{.CreatedAt.Format "02/01/2006 15:04"}}
                   </td>
                   <td>
                     <div class="btn-group" role="group">
-                      <a
-                        href="/solicitacao/{{.ID}}"
-                        class="btn btn-outline-primary btn-sm"
-                        title="Ver Detalhes"
-                      >
+                      <a href="/solicitacao/{{.ID}}" class="btn btn-outline-primary btn-sm" title="Ver Detalhes">
                         <i class="bi bi-eye-fill"></i>
                       </a>
                       {{if eq .StatusID 1}}
-                      <a
-                        href="/solicitacao/{{.ID}}/editar"
-                        class="btn btn-outline-warning btn-sm"
-                        title="Editar"
-                      >
+                      <a href="/solicitacao/{{.ID}}/editar" class="btn btn-outline-warning btn-sm" title="Editar">
                         <i class="bi bi-pencil-fill"></i>
                       </a>
-                      <button
-                        type="button"
-                        class="btn btn-outline-danger btn-sm"
-                        title="Cancelar"
-                        onclick="cancelarSolicitacao('{{.ID}}')"
-                      >
+                      <button type="button" class="btn btn-outline-danger btn-sm" title="Cancelar"
+                        onclick="cancelarSolicitacao('{{.ID}}')">
                         <i class="bi bi-x-lg"></i>
                       </button>
                       {{end}}
@@ -184,11 +199,70 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Paginação -->
+          {{if gt .TotalPages 1}}
+          <nav aria-label="Navegação de páginas" class="mt-4">
+            <ul class="pagination justify-content-center">
+              <!-- Botão Anterior -->
+              <li class="page-item {{if not .HasPrevPage}}disabled{{end}}">
+                <a class="page-link" href="?page={{sub .CurrentPage 1}}{{if .StatusFilter}}&status={{.StatusFilter}}{{end}}{{if .ServiceTypeFilter}}&service_type={{.ServiceTypeFilter}}{{end}}" 
+                   {{if not .HasPrevPage}}tabindex="-1" aria-disabled="true"{{end}}>
+                  <i class="bi bi-chevron-left"></i>
+                  Anterior
+                </a>
+              </li>
+
+              <!-- Números de página -->
+              {{range $i := makeRange 1 (add .TotalPages 1)}}
+                {{if or (eq $i 1) (eq $i $.TotalPages) (and (ge $i (sub $.CurrentPage 2)) (le $i (add $.CurrentPage 2)))}}
+                  <li class="page-item {{if eq $i $.CurrentPage}}active{{end}}">
+                    <a class="page-link" href="?page={{$i}}{{if $.StatusFilter}}&status={{$.StatusFilter}}{{end}}{{if $.ServiceTypeFilter}}&service_type={{$.ServiceTypeFilter}}{{end}}">
+                      {{$i}}
+                    </a>
+                  </li>
+                {{else if or (eq $i (sub $.CurrentPage 3)) (eq $i (add $.CurrentPage 3))}}
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                {{end}}
+              {{end}}
+
+              <!-- Botão Próximo -->
+              <li class="page-item {{if not .HasNextPage}}disabled{{end}}">
+                <a class="page-link" href="?page={{add .CurrentPage 1}}{{if .StatusFilter}}&status={{.StatusFilter}}{{end}}{{if .ServiceTypeFilter}}&service_type={{.ServiceTypeFilter}}{{end}}"
+                   {{if not .HasNextPage}}tabindex="-1" aria-disabled="true"{{end}}>
+                  Próximo
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+          {{end}}
+
           {{else}}
           <div class="text-center py-5">
             <i class="bi bi-inbox text-muted mb-3" style="font-size: 64px"></i>
-            <h5 class="text-muted">Nenhuma solicitação encontrada</h5>
-            <p class="text-muted">Faça sua primeira solicitação de vistoria!</p>
+            <h5 class="text-muted">
+              {{if or .StatusFilter .ServiceTypeFilter}}
+                Nenhuma solicitação encontrada com os filtros aplicados
+              {{else}}
+                Nenhuma solicitação encontrada
+              {{end}}
+            </h5>
+            <p class="text-muted">
+              {{if or .StatusFilter .ServiceTypeFilter}}
+                Tente ajustar os filtros ou limpar para ver todas as solicitações
+              {{else}}
+                Faça sua primeira solicitação de vistoria!
+              {{end}}
+            </p>
+            {{if or .StatusFilter .ServiceTypeFilter}}
+            <button class="btn btn-outline-primary me-2" onclick="clearFilters()">
+              <i class="bi bi-x-circle me-1"></i>
+              Limpar Filtros
+            </button>
+            {{end}}
             <a href="/solicitar-servico" class="btn btn-primary-custom">
               <i class="bi bi-plus-circle-fill me-2"></i>
               Nova Solicitação
@@ -208,22 +282,14 @@
               <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
               Cancelar Solicitação
             </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <p>Tem certeza que deseja cancelar esta solicitação de vistoria?</p>
             <p class="text-muted small">Esta ação não poderá ser desfeita.</p>
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               Não, manter
             </button>
             <form id="cancelForm" method="POST" style="display: inline">
