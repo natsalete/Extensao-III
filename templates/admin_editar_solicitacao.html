@@ -1,0 +1,152 @@
+{{define "admin_editar_solicitacao.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  {{template "head" .}}
+  <body>
+    {{template "navbar" .}}
+
+    <div class="container mt-4">
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <div class="card">
+            <div class="card-header text-center">
+              <h3 class="mb-0 text-white">
+                <i class="bi bi-pencil-square me-2"></i>
+                Editar Solicitação #{{.Service.ID}}
+              </h3>
+            </div>
+            <div class="card-body p-4">
+              <form method="POST">
+                <!-- Nome -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-person-fill"></i> Dados Pessoais</h5>
+                  <label class="form-label fw-bold">Nome Completo *</label>
+                  <input type="text" class="form-control" name="full_name" value="{{.Service.FullName}}" required />
+                </div>
+
+                <!-- Tipo de Serviço -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-gear-fill"></i> Tipo de Serviço *</h5>
+                  <div class="row g-3">
+                    {{range .ServiceTypes}}
+                    <div class="col-md-4">
+                      <label class="service-option d-block {{if eq $.Service.ServiceTypeID .ID}}selected{{end}}" for="service_{{.Code}}">
+                        <input type="radio" name="service_type" value="{{.Code}}" id="service_{{.Code}}" 
+                               {{if eq $.Service.ServiceTypeID .ID}}checked{{end}} required />
+                        <div class="text-center">
+                          <i class="bi bi-{{.Icon}} service-icon"></i>
+                          <h6 class="fw-bold">{{.Name}}</h6>
+                          <p class="text-muted small mb-0">{{.Description}}</p>
+                        </div>
+                      </label>
+                    </div>
+                    {{end}}
+                  </div>
+                </div>
+
+                <!-- Endereço -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-geo-alt-fill"></i> Local da Vistoria *</h5>
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label fw-bold">CEP *</label>
+                      <input type="text" class="form-control" name="cep" value="{{.Service.CEP}}" maxlength="9" required />
+                    </div>
+                    <div class="col-md-8 mb-3">
+                      <label class="form-label fw-bold">Logradouro *</label>
+                      <input type="text" class="form-control" name="logradouro" value="{{.Service.Logradouro}}" required />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label class="form-label fw-bold">Número *</label>
+                      <input type="text" class="form-control" name="numero" value="{{.Service.Numero}}" required />
+                    </div>
+                    <div class="col-md-5 mb-3">
+                      <label class="form-label fw-bold">Bairro *</label>
+                      <input type="text" class="form-control" name="bairro" value="{{.Service.Bairro}}" required />
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label fw-bold">Cidade *</label>
+                      <input type="text" class="form-control" name="cidade" value="{{.Service.Cidade}}" required />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label class="form-label fw-bold">Estado *</label>
+                      <select class="form-control" name="estado" required>
+                        <option value="">Selecione</option>
+                        <option value="MG" {{if eq .Service.Estado "MG"}}selected{{end}}>Minas Gerais</option>
+                        <option value="SP" {{if eq .Service.Estado "SP"}}selected{{end}}>São Paulo</option>
+                        <option value="RJ" {{if eq .Service.Estado "RJ"}}selected{{end}}>Rio de Janeiro</option>
+                        <!-- Adicione outros estados -->
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Data/Hora -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-calendar-check"></i> Agendamento *</h5>
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Data Preferencial *</label>
+                      <input type="date" class="form-control" name="preferred_date" 
+                             value="{{.Service.PreferredDate.Format "2006-01-02"}}" required />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label fw-bold">Horário *</label>
+                      <input type="time" class="form-control" name="preferred_time" 
+                             value="{{slice .Service.PreferredTime 0 5}}" required />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Status (Admin) -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-danger"><i class="bi bi-shield-fill"></i> Status (Apenas Admin)</h5>
+                  <select class="form-select" name="status_id" required>
+                    {{range .Statuses}}
+                    <option value="{{.ID}}" {{if eq $.Service.StatusID .ID}}selected{{end}}>{{.Name}}</option>
+                    {{end}}
+                  </select>
+                  <div class="form-text text-danger">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    Alterar o status enviará notificação ao cliente!
+                  </div>
+                </div>
+
+                <!-- Observações -->
+                <div class="mb-4">
+                  <h5 class="fw-bold mb-3 text-primary"><i class="bi bi-file-text"></i> Observações</h5>
+                  <textarea class="form-control" name="description" rows="4">{{.Service.Description}}</textarea>
+                </div>
+
+                <!-- Botões -->
+                <div class="d-flex justify-content-between">
+                  <a href="/admin/solicitacao/{{.Service.ID}}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Voltar
+                  </a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-2"></i>Salvar Alterações
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{template "footer" .}}
+    {{template "scripts" .}}
+
+    <script>
+      // Service option selection
+      document.querySelectorAll('.service-option').forEach(option => {
+        option.addEventListener('click', function() {
+          document.querySelectorAll('.service-option').forEach(o => o.classList.remove('selected'));
+          this.classList.add('selected');
+          this.querySelector('input[type="radio"]').checked = true;
+        });
+      });
+    </script>
+  </body>
+</html>
+{{end}}
