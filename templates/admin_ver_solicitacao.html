@@ -1,0 +1,275 @@
+{{define "admin_ver_solicitacao.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  {{template "head" .}}
+  <body>
+    {{template "navbar" .}}
+
+    <div class="container mt-4">
+      <div class="row justify-content-center">
+        <div class="col-md-10">
+          <!-- Header -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+              <i class="bi bi-file-text text-primary me-2"></i>
+              Detalhes da Solicitação #{{.Service.ID}}
+            </h2>
+            <div>
+              <span class="status-badge {{.Service.StatusColor}}"
+                >{{.Service.StatusName}}</span
+              >
+            </div>
+          </div>
+
+          <!-- Info Cards -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>Informações do Serviço
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <strong>Tipo de Serviço:</strong><br />
+                  <i
+                    class="bi bi-{{.Service.ServiceTypeIcon}} text-primary me-2 fs-5"
+                  ></i>
+                  <span class="fs-6">{{.Service.ServiceTypeName}}</span>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <strong>Data da Solicitação:</strong><br />
+                  <span class="text-muted"
+                    >{{.Service.CreatedAt.Format "02/01/2006 às 15:04"}}</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cliente Info -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-person me-2"></i>Dados do Cliente
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <strong>Nome do Cliente:</strong><br />
+                  {{.Service.UserName}}
+                </div>
+                <div class="col-md-6">
+                  <strong>Email:</strong><br />
+                  {{.Service.UserEmail}}
+                </div>
+                <div class="col-md-12 mt-3">
+                  <strong>Solicitante:</strong><br />
+                  <span class="fs-5">{{.Service.FullName}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-geo-alt me-2"></i>Local da Vistoria
+              </h5>
+            </div>
+            <div class="card-body">
+              <p class="mb-2">
+                <strong>{{.Service.Logradouro}}, {{.Service.Numero}}</strong>
+              </p>
+              <p class="mb-2">{{.Service.Bairro}}</p>
+              <p class="mb-2">{{.Service.Cidade}} - {{.Service.Estado}}</p>
+              <p class="mb-0"><strong>CEP:</strong> {{.Service.CEP}}</p>
+            </div>
+          </div>
+
+          <!-- Schedule -->
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-calendar-check me-2"></i>Agendamento
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <i class="bi bi-calendar-date text-primary me-2 fs-3"></i>
+                  <strong>Data:</strong> {{.Service.PreferredDate.Format
+                  "02/01/2006"}}
+                </div>
+                <div class="col-md-6">
+                  <i class="bi bi-clock text-primary me-2 fs-3"></i>
+                  <strong>Horário:</strong> {{slice .Service.PreferredTime 11
+                  16}}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          {{if .Service.Description}}
+          <div class="card mb-3">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="bi bi-file-text me-2"></i>Observações
+              </h5>
+            </div>
+            <div class="card-body">
+              <p class="mb-0">{{.Service.Description}}</p>
+            </div>
+          </div>
+          {{end}}
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-between mb-4 flex-wrap gap-2">
+            <a href="/dashboard/admin" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left me-2"></i>
+              Voltar
+            </a>
+            <div class="d-flex gap-2">
+              <button
+                type="button"
+                class="btn btn-info"
+                onclick="openStatusModal()"
+              >
+                <i class="bi bi-arrow-repeat me-2"></i>
+                Alterar Status
+              </button>
+              <a
+                href="/admin/solicitacao/{{.Service.ID}}/editar"
+                class="btn btn-warning"
+              >
+                <i class="bi bi-pencil me-2"></i>
+                Editar
+              </a>
+              <button
+                type="button"
+                class="btn btn-danger"
+                onclick="deletarSolicitacao()"
+              >
+                <i class="bi bi-trash me-2"></i>
+                Deletar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Modal -->
+    <div class="modal fade" id="statusModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-arrow-repeat me-2"></i>Alterar Status
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <form method="POST" action="/admin/update-status">
+            <div class="modal-body">
+              <input type="hidden" name="request_id" value="{{.Service.ID}}" />
+              <label class="form-label fw-bold">Novo Status:</label>
+              <select name="status_id" class="form-select" required>
+                {{range .Statuses}}
+                <option
+                  value="{{.ID}}"
+                  {{if
+                  eq
+                  $.Service.StatusID
+                  .ID}}selected{{end}}
+                >
+                  {{.Name}}
+                </option>
+                {{end}}
+              </select>
+              <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle me-2"></i>
+                <small>O cliente receberá uma notificação via WhatsApp.</small>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-2"></i>Salvar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirmar
+              Exclusão
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Tem certeza que deseja <strong>deletar</strong> esta solicitação?
+            </p>
+            <p class="text-danger small mb-0">
+              Esta ação não pode ser desfeita!
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <form
+              method="POST"
+              action="/admin/solicitacao/{{.Service.ID}}/deletar"
+              style="display: inline"
+            >
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash me-2"></i>Deletar
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{template "footer" .}} {{template "scripts" .}}
+
+    <script>
+      function openStatusModal() {
+        new bootstrap.Modal(document.getElementById("statusModal")).show();
+      }
+      function deletarSolicitacao() {
+        new bootstrap.Modal(document.getElementById("deleteModal")).show();
+      }
+    </script>
+  </body>
+</html>
+{{end}}

@@ -1,199 +1,282 @@
+{{define "admin_dashboard.html"}}
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard Administrador - Martins Poços</title>
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="../static/css/.css" />
-  </head>
+  {{template "head" .}}
   <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-      <div class="container">
-        <a class="navbar-brand text-white fw-bold" href="/">
-          <i data-lucide="shield-check" class="me-2"></i>
-          Martins Poços - Admin
-        </a>
-        <div class="navbar-nav ms-auto">
-          <span class="navbar-text text-white me-3">
-            Administrador: {{.UserName}}
-          </span>
-          <a class="nav-link text-white" href="/logout">Sair</a>
-        </div>
-      </div>
-    </nav>
+    {{template "navbar" .}}
 
     <div class="container mt-4">
-      <!-- Welcome Card -->
-      <div class="welcome-card p-4 mb-4">
-        <div class="row align-items-center">
-          <div class="col-md-8">
-            <h2 class="mb-3">Painel Administrativo</h2>
-            <p class="mb-0">
-              Gerencie todas as solicitações de serviços dos clientes.
-            </p>
-          </div>
-          <div class="col-md-4 text-end">
-            <i data-lucide="users" style="width: 64px; height: 64px"></i>
-          </div>
+      <!-- Success Message -->
+      {{if .SuccessMsg}}
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        {{.SuccessMsg}}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {{end}}
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 class="mb-1">
+            <i class="bi bi-speedometer2 text-primary me-2"></i>
+            Dashboard Administrativo
+          </h2>
+          <p class="text-muted">Gerencie todas as solicitações de vistoria</p>
         </div>
       </div>
 
       <!-- Stats Cards -->
       <div class="row mb-4">
         <div class="col-md-3">
-          <div class="card stats-card">
-            <div class="card-body text-center">
-              <i
-                data-lucide="clock"
-                class="text-warning mb-3"
-                style="width: 48px; height: 48px"
-              ></i>
-              <h5 class="card-title">Pendentes</h5>
-              <h3 class="text-warning" id="pending-count">0</h3>
+          <div class="card stats-card border-start border-warning border-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted text-uppercase mb-2">Solicitadas</h6>
+                  <h2 class="mb-0 text-warning">{{.SolicitadaCount}}</h2>
+                  <small class="text-muted">Aguardando análise</small>
+                </div>
+                <div class="icon-box bg-warning bg-opacity-10">
+                  <i class="bi bi-clock-fill text-warning fs-2"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
         <div class="col-md-3">
-          <div class="card stats-card">
-            <div class="card-body text-center">
-              <i
-                data-lucide="settings"
-                class="text-primary mb-3"
-                style="width: 48px; height: 48px"
-              ></i>
-              <h5 class="card-title">Em Andamento</h5>
-              <h3 class="text-primary" id="progress-count">0</h3>
+          <div class="card stats-card border-start border-info border-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted text-uppercase mb-2">Confirmadas</h6>
+                  <h2 class="mb-0 text-info">{{.ConfirmadaCount}}</h2>
+                  <small class="text-muted">Agendadas</small>
+                </div>
+                <div class="icon-box bg-info bg-opacity-10">
+                  <i class="bi bi-calendar-check-fill text-info fs-2"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
         <div class="col-md-3">
-          <div class="card stats-card">
-            <div class="card-body text-center">
-              <i
-                data-lucide="check-circle"
-                class="text-success mb-3"
-                style="width: 48px; height: 48px"
-              ></i>
-              <h5 class="card-title">Concluídos</h5>
-              <h3 class="text-success" id="completed-count">0</h3>
+          <div class="card stats-card border-start border-success border-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted text-uppercase mb-2">Realizadas</h6>
+                  <h2 class="mb-0 text-success">{{.RealizadaCount}}</h2>
+                  <small class="text-muted">Concluídas</small>
+                </div>
+                <div class="icon-box bg-success bg-opacity-10">
+                  <i class="bi bi-check-circle-fill text-success fs-2"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
         <div class="col-md-3">
-          <div class="card stats-card">
-            <div class="card-body text-center">
-              <i
-                data-lucide="list"
-                class="text-info mb-3"
-                style="width: 48px; height: 48px"
-              ></i>
-              <h5 class="card-title">Total</h5>
-              <h3 class="text-info" id="total-count">0</h3>
+          <div class="card stats-card border-start border-danger border-4">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted text-uppercase mb-2">Canceladas</h6>
+                  <h2 class="mb-0 text-danger">{{.CanceladaCount}}</h2>
+                  <small class="text-muted">Não realizadas</small>
+                </div>
+                <div class="icon-box bg-danger bg-opacity-10">
+                  <i class="bi bi-x-circle-fill text-danger fs-2"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Service Requests Management -->
-      <div class="card">
-        <div class="card-header">
-          <h4 class="mb-0">
-            <i data-lucide="settings" class="me-2"></i>
-            Gerenciar Solicitações
-          </h4>
-        </div>
+      <!-- Filters & Search -->
+      <div class="card mb-4">
         <div class="card-body">
+          <form method="GET" action="/dashboard/admin" id="filterForm">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-search me-1"></i>
+                  Buscar
+                </label>
+                <input
+                  type="text"
+                  name="search"
+                  class="form-control"
+                  placeholder="Nome, cidade ou email..."
+                  value="{{.SearchQuery}}"
+                />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-funnel-fill me-1"></i>
+                  Status
+                </label>
+                <select
+                  name="status"
+                  class="form-select"
+                  onchange="document.getElementById('filterForm').submit()"
+                >
+                  <option value="">Todos os Status</option>
+                  {{range .Statuses}}
+                  <option value="{{.Code}}" {{if eq $.StatusFilter .Code}}selected{{end}}>
+                    {{.Name}}
+                  </option>
+                  {{end}}
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-gear-fill me-1"></i>
+                  Tipo de Serviço
+                </label>
+                <select
+                  name="service_type"
+                  class="form-select"
+                  onchange="document.getElementById('filterForm').submit()"
+                >
+                  <option value="">Todos os Tipos</option>
+                  {{range .ServiceTypes}}
+                  <option value="{{.Code}}" {{if eq $.ServiceTypeFilter .Code}}selected{{end}}>
+                    {{.Name}}
+                  </option>
+                  {{end}}
+                </select>
+              </div>
+
+              <div class="col-md-2 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                  <i class="bi bi-search me-1"></i>
+                  Buscar
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  onclick="clearFilters()"
+                  title="Limpar Filtros"
+                >
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Requests Table -->
+      <div class="card">
+        <div class="card-header bg-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="bi bi-list-ul me-2"></i>
+              Solicitações de Vistoria
+            </h5>
+            {{if .Requests}}
+            <span class="badge bg-primary">
+              Mostrando {{len .Requests}} de {{.TotalCount}} solicitação(ões)
+            </span>
+            {{end}}
+          </div>
+        </div>
+        <div class="card-body p-0">
           {{if .Requests}}
           <div class="table-responsive">
-            <table class="table table-hover">
-              <thead>
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
                 <tr>
+                  <th>ID</th>
                   <th>Cliente</th>
+                  <th>Solicitante</th>
                   <th>Serviço</th>
-                  <th>Descrição</th>
+                  <th>Local</th>
+                  <th>Data/Hora</th>
                   <th>Status</th>
-                  <th>Data</th>
-                  <th>Ações</th>
+                  <th>Solicitado em</th>
+                  <th class="text-center">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {{range .Requests}}
-                <tr data-request-id="{{.ID}}">
+                <tr>
+                  <td><strong>#{{.ID}}</strong></td>
                   <td>
-                    <div>
-                      <strong>{{.UserName}}</strong><br />
+                    <div class="d-flex flex-column">
+                      <strong>{{.UserName}}</strong>
                       <small class="text-muted">{{.UserEmail}}</small>
                     </div>
                   </td>
+                  <td><strong>{{.FullName}}</strong></td>
                   <td>
-                    <div class="d-flex align-items-center">
-                      {{if eq .ServiceType "perfuracao"}}
-                      <i
-                        data-lucide="construction"
-                        class="text-primary me-2"
-                      ></i>
-                      Perfuração de Poços {{else if eq .ServiceType "analise"}}
-                      <i data-lucide="droplets" class="text-primary me-2"></i>
-                      Análise da Água {{else if eq .ServiceType "manutencao"}}
-                      <i data-lucide="droplet" class="text-primary me-2"></i>
-                      Manutenção {{else}}
-                      <i data-lucide="help-circle" class="text-muted me-2"></i>
-                      {{.ServiceType}} {{end}}
+                    <span class="badge bg-secondary">
+                      <i class="bi bi-{{.ServiceTypeIcon}} me-1"></i>
+                      {{.ServiceTypeName}}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="small">
+                      {{.Cidade}}/{{.Estado}}<br />
+                      <small class="text-muted">{{.Bairro}}</small>
                     </div>
                   </td>
                   <td>
-                    <div
-                      class="text-truncate"
-                      style="max-width: 200px"
-                      title="{{.Description}}"
-                    >
-                      {{.Description}}
+                    <div class="small">
+                      <i class="bi bi-calendar3 me-1"></i>
+                      {{.PreferredDate.Format "02/01/2006"}}<br />
+                      <i class="bi bi-clock me-1"></i>
+                      <strong>{{slice .PreferredTime 11 16}}</strong>
                     </div>
                   </td>
-                  <td class="status-cell">
-                    {{if eq .Status "pendente"}}
-                    <span class="status-badge status-pendente">Pendente</span>
-                    {{else if eq .Status "em_andamento"}}
-                    <span class="status-badge status-em_andamento"
-                      >Em Andamento</span
-                    >
-                    {{else if eq .Status "concluido"}}
-                    <span class="status-badge status-concluido">Concluído</span>
-                    {{end}}
-                  </td>
-                  <td>{{.CreatedAt.Format "02/01/2006 15:04"}}</td>
                   <td>
-                    <div class="btn-group-vertical" role="group">
-                      {{if ne .Status "pendente"}}
-                      <button
-                        class="btn btn-status btn-warning-custom"
-                        onclick="updateStatus('{{.ID}}', 'pendente')"
+                    <span class="status-badge {{.StatusColor}}">
+                      {{.StatusName}}
+                    </span>
+                  </td>
+                  <td class="small">
+                    {{.CreatedAt.Format "02/01/2006"}}<br />
+                    <small class="text-muted">{{.CreatedAt.Format "15:04"}}</small>
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <a
+                        href="/admin/solicitacao/{{.ID}}"
+                        class="btn btn-sm btn-outline-primary"
+                        title="Ver Detalhes"
                       >
-                        Pendente
-                      </button>
-                      {{end}} {{if ne .Status "em_andamento"}}
-                      <button
-                        class="btn btn-status btn-info-custom"
-                        onclick="updateStatus('{{.ID}}', 'em_andamento')"
+                        <i class="bi bi-eye-fill"></i>
+                      </a>
+                      <a
+                        href="/admin/solicitacao/{{.ID}}/editar"
+                        class="btn btn-sm btn-outline-warning"
+                        title="Editar"
                       >
-                        Em Andamento
-                      </button>
-
-                      {{end}} {{if ne .Status "concluido"}}
+                        <i class="bi bi-pencil-fill"></i>
+                      </a>
                       <button
-                        class="btn btn-status btn-success-custom"
-                        onclick="updateStatus('{{.ID}}', 'concluido')"
+                        type="button"
+                        class="btn btn-sm btn-outline-info"
+                        title="Alterar Status"
+                        onclick="openStatusModal('{{.ID}}', '{{.StatusID}}', '{{.FullName}}')"
                       >
-                        Concluído
+                        <i class="bi bi-arrow-repeat"></i>
                       </button>
-                      {{end}}
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        title="Deletar"
+                        onclick="deletarSolicitacao('{{.ID}}')"
+                      >
+                        <i class="bi bi-trash-fill"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -201,29 +284,146 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination -->
+          {{if gt .TotalPages 1}}
+          <nav aria-label="Navegação de páginas" class="mt-3 px-3 pb-3">
+            <ul class="pagination justify-content-center mb-0">
+              <li class="page-item {{if not .HasPrevPage}}disabled{{end}}">
+                <a
+                  class="page-link"
+                  href="?page={{sub .CurrentPage 1}}{{if .StatusFilter}}&status={{.StatusFilter}}{{end}}{{if .ServiceTypeFilter}}&service_type={{.ServiceTypeFilter}}{{end}}{{if .SearchQuery}}&search={{.SearchQuery}}{{end}}"
+                >
+                  <i class="bi bi-chevron-left"></i>
+                  Anterior
+                </a>
+              </li>
+
+              {{range $i := makeRange 1 (add .TotalPages 1)}}
+              {{if or (eq $i 1) (eq $i $.TotalPages) (and (ge $i (sub $.CurrentPage 2)) (le $i (add $.CurrentPage 2)))}}
+              <li class="page-item {{if eq $i $.CurrentPage}}active{{end}}">
+                <a
+                  class="page-link"
+                  href="?page={{$i}}{{if $.StatusFilter}}&status={{$.StatusFilter}}{{end}}{{if $.ServiceTypeFilter}}&service_type={{$.ServiceTypeFilter}}{{end}}{{if $.SearchQuery}}&search={{$.SearchQuery}}{{end}}"
+                >
+                  {{$i}}
+                </a>
+              </li>
+              {{else if or (eq $i (sub $.CurrentPage 3)) (eq $i (add $.CurrentPage 3))}}
+              <li class="page-item disabled">
+                <span class="page-link">...</span>
+              </li>
+              {{end}}
+              {{end}}
+
+              <li class="page-item {{if not .HasNextPage}}disabled{{end}}">
+                <a
+                  class="page-link"
+                  href="?page={{add .CurrentPage 1}}{{if .StatusFilter}}&status={{.StatusFilter}}{{end}}{{if .ServiceTypeFilter}}&service_type={{.ServiceTypeFilter}}{{end}}{{if .SearchQuery}}&search={{.SearchQuery}}{{end}}"
+                >
+                  Próximo
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            </ul>
+          </nav>
+          {{end}}
+
           {{else}}
           <div class="text-center py-5">
-            <i
-              data-lucide="inbox"
-              class="text-muted mb-3"
-              style="width: 64px; height: 64px"
-            ></i>
+            <i class="bi bi-inbox text-muted mb-3" style="font-size: 64px"></i>
             <h5 class="text-muted">Nenhuma solicitação encontrada</h5>
-            <p class="text-muted">Aguardando solicitações dos clientes...</p>
+            <p class="text-muted">
+              {{if or .StatusFilter .ServiceTypeFilter .SearchQuery}}
+              Tente ajustar os filtros de busca
+              {{else}}
+              Não há solicitações cadastradas no momento
+              {{end}}
+            </p>
           </div>
           {{end}}
         </div>
       </div>
     </div>
 
-    <!-- Toast for notifications -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="statusToast" class="toast" role="alert">
-        <div class="toast-body">Status atualizado com sucesso!</div>
+    <!-- Modal de Alteração de Status -->
+    <div class="modal fade" id="statusModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-arrow-repeat me-2"></i>
+              Alterar Status
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form method="POST" action="/admin/update-status">
+            <div class="modal-body">
+              <input type="hidden" name="request_id" id="modalRequestId" />
+              
+              <p>Alterar status da solicitação de <strong id="modalClientName"></strong>:</p>
+              
+              <label class="form-label fw-bold">Novo Status:</label>
+              <select name="status_id" class="form-select" id="modalStatusSelect" required>
+                {{range .Statuses}}
+                <option value="{{.ID}}">{{.Name}}</option>
+                {{end}}
+              </select>
+              
+              <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle me-2"></i>
+                <small>O cliente receberá uma notificação via WhatsApp sobre a alteração.</small>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-save me-2"></i>
+                Salvar Alteração
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
-    <script src="../static/js/admin_dashboard.js"></script>
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              Confirmar Exclusão
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Tem certeza que deseja <strong>deletar permanentemente</strong> esta solicitação?</p>
+            <p class="text-danger small mb-0">
+              <i class="bi bi-exclamation-circle me-1"></i>
+              Esta ação não poderá ser desfeita!
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <form id="deleteForm" method="POST" style="display: inline">
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash-fill me-2"></i>
+                Sim, deletar
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{template "footer" .}}
+    {{template "scripts" .}}
   </body>
 </html>
+{{end}}
