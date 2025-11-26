@@ -12,48 +12,88 @@
           Soluções completas em perfuração, manutenção e vistoria de poços artesianos.
         </p>
       </div>
+      
       <div class="col-md-4 mb-3 mb-md-0">
         <h6 class="text-white fw-bold mb-3">Links Rápidos</h6>
         <ul class="list-unstyled">
           <li class="mb-2">
-            <a href="/" class="text-white-50 text-decoration-none">
+            <a href="/" class="footer-link text-decoration-none">
               <i class="bi bi-house-door me-1"></i>
               Início
             </a>
           </li>
+          {{if .UserName}}
+            {{if .IsAdmin}}
+            <li class="mb-2">
+              <a href="/dashboard/admin" class="footer-link text-decoration-none">
+                <i class="bi bi-speedometer2 me-1"></i>
+                Dashboard Admin
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="/admin/contratos" class="footer-link text-decoration-none">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                Contratos
+              </a>
+            </li>
+            {{else}}
+            <li class="mb-2">
+              <a href="/dashboard/cliente" class="footer-link text-decoration-none">
+                <i class="bi bi-speedometer2 me-1"></i>
+                Meu Dashboard
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="/contratos" class="footer-link text-decoration-none">
+                <i class="bi bi-file-earmark-text me-1"></i>
+                Meus Contratos
+              </a>
+            </li>
+            <li class="mb-2">
+              <a href="/solicitar-servico" class="footer-link text-decoration-none">
+                <i class="bi bi-plus-circle me-1"></i>
+                Nova Solicitação
+              </a>
+            </li>
+            {{end}}
+          {{else}}
           <li class="mb-2">
-            <a href="/dashboard/cliente" class="text-white-50 text-decoration-none">
-              <i class="bi bi-speedometer2 me-1"></i>
-              Dashboard
+            <a href="/login" class="footer-link text-decoration-none">
+              <i class="bi bi-box-arrow-in-right me-1"></i>
+              Entrar
             </a>
           </li>
-          <li class="mb-2">
-            <a href="/solicitar-servico" class="text-white-50 text-decoration-none">
-              <i class="bi bi-plus-circle me-1"></i>
-              Nova Solicitação
-            </a>
-          </li>
+          {{end}}
         </ul>
       </div>
+      
       <div class="col-md-4">
         <h6 class="text-white fw-bold mb-3">Contato</h6>
         <ul class="list-unstyled">
           <li class="mb-2">
-            <i class="bi bi-telephone text-white-50 me-2"></i>
-            <span class="text-white-50">(34) 9999-9999</span>
+            <a href="tel:+5534999999999" class="footer-link text-decoration-none">
+              <i class="bi bi-telephone me-2"></i>
+              (34) 9999-9999
+            </a>
           </li>
           <li class="mb-2">
-            <i class="bi bi-envelope text-white-50 me-2"></i>
-            <span class="text-white-50">contato@martinspocos.com</span>
+            <a href="mailto:contato@martinspocos.com" class="footer-link text-decoration-none">
+              <i class="bi bi-envelope me-2"></i>
+              contato@martinspocos.com
+            </a>
           </li>
           <li class="mb-2">
-            <i class="bi bi-geo-alt text-white-50 me-2"></i>
-            <span class="text-white-50">Monte Carmelo - MG</span>
+            <span class="text-white-50">
+              <i class="bi bi-geo-alt me-2"></i>
+              Monte Carmelo - MG
+            </span>
           </li>
         </ul>
       </div>
     </div>
-    <hr class="border-white-50 my-4">
+    
+    <hr class="footer-divider my-4">
+    
     <div class="text-center">
       <p class="text-white-50 small mb-0">
         &copy; {{.CurrentYear}} Martins Poços. Todos os direitos reservados.
@@ -61,16 +101,4 @@
     </div>
   </div>
 </footer>
-
-<style>
-.footer-custom {
-  background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-  margin-top: auto;
-}
-
-.footer-custom a:hover {
-  color: #ffffff !important;
-  transition: color 0.3s ease;
-}
-</style>
 {{end}}

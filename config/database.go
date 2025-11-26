@@ -98,6 +98,39 @@ func createTables() {
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
+	contractsTable := `
+	CREATE TABLE IF NOT EXISTS contracts (
+		id SERIAL PRIMARY KEY,
+		service_request_id INTEGER UNIQUE NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+		contract_number VARCHAR(50) UNIQUE NOT NULL,
+		total_value DECIMAL(10,2) NOT NULL,
+		payment_conditions TEXT NOT NULL,
+		guarantee_type VARCHAR(50) NOT NULL,
+		guarantee_custom TEXT,
+		client_requirements TEXT,
+		materials_used TEXT,
+		additional_notes TEXT,
+		client_signed BOOLEAN DEFAULT false,
+		client_signed_at TIMESTAMP,
+		client_signature TEXT,
+		company_signed BOOLEAN DEFAULT false,
+		company_signed_at TIMESTAMP,
+		company_signature TEXT,
+		status VARCHAR(50) DEFAULT 'RASCUNHO',
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	contractHistoryTable := `
+	CREATE TABLE IF NOT EXISTS contract_history (
+		id SERIAL PRIMARY KEY,
+		contract_id INTEGER NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+		action VARCHAR(50) NOT NULL,
+		changed_by INTEGER REFERENCES users(id),
+		changed_fields TEXT,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
 	// Criar tabelas na ordem correta
 	tables := []struct {
 		name  string
@@ -108,6 +141,8 @@ func createTables() {
 		{"service_types", serviceTypesTable},
 		{"request_status", requestStatusTable},
 		{"service_requests", serviceRequestTable},
+		{"contracts", contractsTable},
+		{"contract_history", contractHistoryTable},
 	}
 
 	for _, table := range tables {

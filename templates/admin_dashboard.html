@@ -11,7 +11,11 @@
       <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
         {{.SuccessMsg}}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
       </div>
       {{end}}
 
@@ -128,7 +132,13 @@
                 >
                   <option value="">Todos os Status</option>
                   {{range .Statuses}}
-                  <option value="{{.Code}}" {{if eq $.StatusFilter .Code}}selected{{end}}>
+                  <option
+                    value="{{.Code}}"
+                    {{if
+                    eq
+                    $.StatusFilter
+                    .Code}}selected{{end}}
+                  >
                     {{.Name}}
                   </option>
                   {{end}}
@@ -147,7 +157,13 @@
                 >
                   <option value="">Todos os Tipos</option>
                   {{range .ServiceTypes}}
-                  <option value="{{.Code}}" {{if eq $.ServiceTypeFilter .Code}}selected{{end}}>
+                  <option
+                    value="{{.Code}}"
+                    {{if
+                    eq
+                    $.ServiceTypeFilter
+                    .Code}}selected{{end}}
+                  >
                     {{.Name}}
                   </option>
                   {{end}}
@@ -243,7 +259,9 @@
                   </td>
                   <td class="small">
                     {{.CreatedAt.Format "02/01/2006"}}<br />
-                    <small class="text-muted">{{.CreatedAt.Format "15:04"}}</small>
+                    <small class="text-muted"
+                      >{{.CreatedAt.Format "15:04"}}</small
+                    >
                   </td>
                   <td>
                     <div class="btn-group" role="group">
@@ -269,6 +287,18 @@
                       >
                         <i class="bi bi-arrow-repeat"></i>
                       </button>
+
+                      <!-- NOVO: Botão criar contrato - só aparece para status REALIZADA (ID=3) -->
+                      {{if eq .StatusID 3}}
+                      <a
+                        href="/admin/solicitacao/{{.ID}}/criar-contrato"
+                        class="btn btn-sm btn-outline-success"
+                        title="Criar Contrato"
+                      >
+                        <i class="bi bi-file-earmark-plus"></i>
+                      </a>
+                      {{end}}
+
                       <button
                         type="button"
                         class="btn btn-sm btn-outline-danger"
@@ -299,8 +329,9 @@
                 </a>
               </li>
 
-              {{range $i := makeRange 1 (add .TotalPages 1)}}
-              {{if or (eq $i 1) (eq $i $.TotalPages) (and (ge $i (sub $.CurrentPage 2)) (le $i (add $.CurrentPage 2)))}}
+              {{range $i := makeRange 1 (add .TotalPages 1)}} {{if or (eq $i 1)
+              (eq $i $.TotalPages) (and (ge $i (sub $.CurrentPage 2)) (le $i
+              (add $.CurrentPage 2)))}}
               <li class="page-item {{if eq $i $.CurrentPage}}active{{end}}">
                 <a
                   class="page-link"
@@ -309,12 +340,12 @@
                   {{$i}}
                 </a>
               </li>
-              {{else if or (eq $i (sub $.CurrentPage 3)) (eq $i (add $.CurrentPage 3))}}
+              {{else if or (eq $i (sub $.CurrentPage 3)) (eq $i (add
+              $.CurrentPage 3))}}
               <li class="page-item disabled">
                 <span class="page-link">...</span>
               </li>
-              {{end}}
-              {{end}}
+              {{end}} {{end}}
 
               <li class="page-item {{if not .HasNextPage}}disabled{{end}}">
                 <a
@@ -327,18 +358,14 @@
               </li>
             </ul>
           </nav>
-          {{end}}
-
-          {{else}}
+          {{end}} {{else}}
           <div class="text-center py-5">
             <i class="bi bi-inbox text-muted mb-3" style="font-size: 64px"></i>
             <h5 class="text-muted">Nenhuma solicitação encontrada</h5>
             <p class="text-muted">
-              {{if or .StatusFilter .ServiceTypeFilter .SearchQuery}}
-              Tente ajustar os filtros de busca
-              {{else}}
-              Não há solicitações cadastradas no momento
-              {{end}}
+              {{if or .StatusFilter .ServiceTypeFilter .SearchQuery}} Tente
+              ajustar os filtros de busca {{else}} Não há solicitações
+              cadastradas no momento {{end}}
             </p>
           </div>
           {{end}}
@@ -355,28 +382,47 @@
               <i class="bi bi-arrow-repeat me-2"></i>
               Alterar Status
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <form method="POST" action="/admin/update-status">
             <div class="modal-body">
               <input type="hidden" name="request_id" id="modalRequestId" />
-              
-              <p>Alterar status da solicitação de <strong id="modalClientName"></strong>:</p>
-              
+
+              <p>
+                Alterar status da solicitação de
+                <strong id="modalClientName"></strong>:
+              </p>
+
               <label class="form-label fw-bold">Novo Status:</label>
-              <select name="status_id" class="form-select" id="modalStatusSelect" required>
+              <select
+                name="status_id"
+                class="form-select"
+                id="modalStatusSelect"
+                required
+              >
                 {{range .Statuses}}
                 <option value="{{.ID}}">{{.Name}}</option>
                 {{end}}
               </select>
-              
+
               <div class="alert alert-info mt-3">
                 <i class="bi bi-info-circle me-2"></i>
-                <small>O cliente receberá uma notificação via WhatsApp sobre a alteração.</small>
+                <small
+                  >O cliente receberá uma notificação via WhatsApp sobre a
+                  alteração.</small
+                >
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
                 Cancelar
               </button>
               <button type="submit" class="btn btn-primary">
@@ -398,17 +444,28 @@
               <i class="bi bi-exclamation-triangle-fill me-2"></i>
               Confirmar Exclusão
             </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
           </div>
           <div class="modal-body">
-            <p>Tem certeza que deseja <strong>deletar permanentemente</strong> esta solicitação?</p>
+            <p>
+              Tem certeza que deseja
+              <strong>deletar permanentemente</strong> esta solicitação?
+            </p>
             <p class="text-danger small mb-0">
               <i class="bi bi-exclamation-circle me-1"></i>
               Esta ação não poderá ser desfeita!
             </p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
               Cancelar
             </button>
             <form id="deleteForm" method="POST" style="display: inline">
@@ -422,8 +479,7 @@
       </div>
     </div>
 
-    {{template "footer" .}}
-    {{template "scripts" .}}
+    {{template "footer" .}} {{template "scripts" .}}
   </body>
 </html>
 {{end}}

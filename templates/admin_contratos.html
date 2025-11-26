@@ -1,0 +1,178 @@
+{{define "admin_contratos.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+{{template "head" .}}
+<body>
+  {{template "navbar" .}}
+
+  <div class="container mt-4">
+    {{if .SuccessMsg}}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle-fill me-2"></i>{{.SuccessMsg}}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {{end}}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h2 class="mb-1">
+          <i class="bi bi-file-earmark-text text-primary me-2"></i>
+          Gestão de Contratos
+        </h2>
+        <p class="text-muted">Gerencie contratos das vistorias realizadas</p>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <form method="GET" action="/admin/contratos">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">
+                <i class="bi bi-funnel-fill me-1"></i>Status
+              </label>
+              <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">Todos os Status</option>
+                <option value="RASCUNHO" {{if eq .StatusFilter "RASCUNHO"}}selected{{end}}>Rascunho</option>
+                <option value="AGUARDANDO_ASSINATURAS" {{if eq .StatusFilter "AGUARDANDO_ASSINATURAS"}}selected{{end}}>Aguardando Assinaturas</option>
+                <option value="ASSINADO" {{if eq .StatusFilter "ASSINADO"}}selected{{end}}>Assinado</option>
+                <option value="CANCELADO" {{if eq .StatusFilter "CANCELADO"}}selected{{end}}>Cancelado</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <a href="/admin/contratos" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg me-1"></i>Limpar
+              </a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista de Contratos -->
+    <div class="card">
+      <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Contratos</h5>
+          {{if .Contracts}}
+          <span class="badge bg-primary">{{.TotalCount}} contrato(s)</span>
+          {{end}}
+        </div>
+      </div>
+      <div class="card-body p-0">
+        {{if .Contracts}}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Nº Contrato</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Valor</th>
+                <th>Status</th>
+                <th>Assinaturas</th>
+                <th>Data</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Contracts}}
+              <tr>
+                <td><strong>{{.ContractNumber}}</strong></td>
+                <td>
+                  {{if .ServiceRequest}}
+                  <div>
+                    <strong>{{.ServiceRequest.FullName}}</strong><br>
+                    <small class="text-muted">{{.ServiceRequest.UserEmail}}</small>
+                  </div>
+                  {{end}}
+                </td>
+                <td>
+                  {{if .ServiceRequest}}
+                  <span class="badge bg-secondary">{{.ServiceRequest.ServiceTypeName}}</span>
+                  {{end}}
+                </td>
+                <td><strong class="text-success">R$ {{printf "%.2f" .TotalValue}}</strong></td>
+                <td>
+                  {{if eq .Status "RASCUNHO"}}
+                  <span class="badge bg-secondary">Rascunho</span>
+                  {{else if eq .Status "AGUARDANDO_ASSINATURAS"}}
+                  <span class="badge bg-warning text-dark">Aguardando Assinaturas</span>
+                  {{else if eq .Status "ASSINADO"}}
+                  <span class="badge bg-success">Assinado</span>
+                  {{else}}
+                  <span class="badge bg-danger">Cancelado</span>
+                  {{end}}
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    {{if .CompanySigned}}
+                    <span class="badge bg-success" title="Empresa assinou"><i class="bi bi-building-check"></i></span>
+                    {{else}}
+                    <span class="badge bg-secondary" title="Empresa não assinou"><i class="bi bi-building"></i></span>
+                    {{end}}
+                    {{if .ClientSigned}}
+                    <span class="badge bg-success" title="Cliente assinou"><i class="bi bi-person-check"></i></span>
+                    {{else}}
+                    <span class="badge bg-secondary" title="Cliente não assinou"><i class="bi bi-person"></i></span>
+                    {{end}}
+                  </div>
+                </td>
+                <td class="small">{{.CreatedAt.Format "02/01/2006"}}</td>
+                <td>
+                  <div class="btn-group">
+                    <a href="/admin/contratos/{{.ID}}" class="btn btn-sm btn-outline-primary" title="Ver">
+                      <i class="bi bi-eye-fill"></i>
+                    </a>
+                    {{if eq .Status "RASCUNHO"}}
+                    <a href="/admin/contratos/{{.ID}}/editar" class="btn btn-sm btn-outline-warning" title="Editar">
+                      <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    {{end}}
+                  </div>
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+
+        {{if gt .TotalPages 1}}
+        <nav class="mt-3 px-3 pb-3">
+          <ul class="pagination justify-content-center mb-0">
+            <li class="page-item {{if not .HasPrevPage}}disabled{{end}}">
+              <a class="page-link" href="?page={{sub .CurrentPage 1}}{{if .StatusFilter}}&status={{.StatusFilter}}{{end}}">
+                <i class="bi bi-chevron-left"></i> Anterior
+              </a>
+            </li>
+            {{range $i := makeRange 1 (add .TotalPages 1)}}
+            <li class="page-item {{if eq $i $.CurrentPage}}active{{end}}">
+              <a class="page-link" href="?page={{$i}}{{if $.StatusFilter}}&status={{$.StatusFilter}}{{end}}">{{$i}}</a>
+            </li>
+            {{end}}
+            <li class="page-item {{if not .HasNextPage}}disabled{{end}}">
+              <a class="page-link" href="?page={{add .CurrentPage 1}}{{if .StatusFilter}}&status={{.StatusFilter}}{{end}}">
+                Próximo <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+          </ul>
+        </nav>
+        {{end}}
+
+        {{else}}
+        <div class="text-center py-5">
+          <i class="bi bi-file-earmark-x text-muted" style="font-size: 64px"></i>
+          <h5 class="text-muted mt-3">Nenhum contrato encontrado</h5>
+          <p class="text-muted">Os contratos serão criados a partir de solicitações realizadas.</p>
+        </div>
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  {{template "footer" .}}
+  {{template "scripts" .}}
+</body>
+</html>
+{{end}}
