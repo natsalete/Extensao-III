@@ -52,7 +52,7 @@ func createTables() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	// Nova tabela: Tipos de Serviço
+	// Tabela: Tipos de Serviço
 	serviceTypesTable := `
 	CREATE TABLE IF NOT EXISTS service_types (
 		id SERIAL PRIMARY KEY,
@@ -64,7 +64,7 @@ func createTables() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	// Nova tabela: Status de Solicitação
+	// Tabela: Status de Solicitação
 	requestStatusTable := `
 	CREATE TABLE IF NOT EXISTS request_status (
 		id SERIAL PRIMARY KEY,
@@ -77,7 +77,38 @@ func createTables() {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
-	// Tabela de solicitações de serviços refatorada
+	// ============================================
+	// NOVA TABELA: Tipos de Garantia
+	// ============================================
+	guaranteeTypesTable := `
+	CREATE TABLE IF NOT EXISTS guarantee_types (
+		id SERIAL PRIMARY KEY,
+		code VARCHAR(50) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
+		description TEXT,
+		requires_custom_text BOOLEAN DEFAULT false,
+		display_order INTEGER,
+		active BOOLEAN DEFAULT true,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	// ============================================
+	// NOVA TABELA: Status de Contrato
+	// ============================================
+	contractStatusTable := `
+	CREATE TABLE IF NOT EXISTS contract_status (
+		id SERIAL PRIMARY KEY,
+		code VARCHAR(50) UNIQUE NOT NULL,
+		name VARCHAR(100) NOT NULL,
+		description TEXT,
+		color_class VARCHAR(50),
+		badge_class VARCHAR(50),
+		display_order INTEGER,
+		active BOOLEAN DEFAULT true,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);`
+
+	// Tabela de solicitações de serviços
 	serviceRequestTable := `
 	CREATE TABLE IF NOT EXISTS service_requests (
 		id SERIAL PRIMARY KEY,
@@ -98,6 +129,9 @@ func createTables() {
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
 
+	// ============================================
+	// TABELA DE CONTRATOS REFATORADA
+	// ============================================
 	contractsTable := `
 	CREATE TABLE IF NOT EXISTS contracts (
 		id SERIAL PRIMARY KEY,
@@ -105,7 +139,7 @@ func createTables() {
 		contract_number VARCHAR(50) UNIQUE NOT NULL,
 		total_value DECIMAL(10,2) NOT NULL,
 		payment_conditions TEXT NOT NULL,
-		guarantee_type VARCHAR(50) NOT NULL,
+		guarantee_type_id INTEGER NOT NULL REFERENCES guarantee_types(id),
 		guarantee_custom TEXT,
 		client_requirements TEXT,
 		materials_used TEXT,
@@ -116,7 +150,7 @@ func createTables() {
 		company_signed BOOLEAN DEFAULT false,
 		company_signed_at TIMESTAMP,
 		company_signature TEXT,
-		status VARCHAR(50) DEFAULT 'RASCUNHO',
+		status_id INTEGER NOT NULL REFERENCES contract_status(id),
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`
@@ -140,6 +174,8 @@ func createTables() {
 		{"users", userTable},
 		{"service_types", serviceTypesTable},
 		{"request_status", requestStatusTable},
+		{"guarantee_types", guaranteeTypesTable},        // NOVA
+		{"contract_status", contractStatusTable},         // NOVA
 		{"service_requests", serviceRequestTable},
 		{"contracts", contractsTable},
 		{"contract_history", contractHistoryTable},
@@ -155,9 +191,10 @@ func createTables() {
 	insertDefaultUserTypes()
 	insertDefaultServiceTypes()
 	insertDefaultRequestStatus()
+	insertDefaultGuaranteeTypes()  // NOVA
+	insertDefaultContractStatus()  // NOVA
 	createDefaultAdmin()
 }
-
 
 func insertDefaultUserTypes() {
 	var count int
@@ -207,6 +244,47 @@ func insertDefaultRequestStatus() {
 			log.Fatal("Error inserting default request status:", err)
 		}
 		log.Println("Default request status created")
+	}
+}
+
+// ============================================
+// NOVA FUNÇÃO: Inserir Tipos de Garantia
+// ============================================
+func insertDefaultGuaranteeTypes() {
+	var count int
+	DB.QueryRow("SELECT COUNT(*) FROM guarantee_types").Scan(&count)
+	
+	if count == 0 {
+		_, err := DB.Exec(`
+			INSERT INTO guarantee_types (code, name, description, requires_custom_text, display_order) VALUES 
+			('SEGUNDA_TENTATIVA', 'Segunda Tentativa', 'Segunda tentativa sem custo adicional', false, 1),
+			('SEM_GARANTIA', 'Sem Garantia', 'Sem garantia adicional', false, 2),
+			('PERSONALIZADA', 'Garantia Personalizada', 'Garantia com termos personalizados', true, 3)`)
+		if err != nil {
+			log.Fatal("Error inserting default guarantee types:", err)
+		}
+		log.Println("Default guarantee types created")
+	}
+}
+
+// ============================================
+// NOVA FUNÇÃO: Inserir Status de Contrato
+// ============================================
+func insertDefaultContractStatus() {
+	var count int
+	DB.QueryRow("SELECT COUNT(*) FROM contract_status").Scan(&count)
+	
+	if count == 0 {
+		_, err := DB.Exec(`
+			INSERT INTO contract_status (code, name, description, color_class, badge_class, display_order) VALUES 
+			('RASCUNHO', 'Rascunho', 'Contrato em elaboração', 'text-secondary', 'bg-secondary', 1),
+			('AGUARDANDO_ASSINATURAS', 'Aguardando Assinaturas', 'Enviado para assinatura das partes', 'text-warning', 'bg-warning text-dark', 2),
+			('ASSINADO', 'Assinado', 'Contrato assinado por ambas as partes', 'text-success', 'bg-success', 3),
+			('CANCELADO', 'Cancelado', 'Contrato cancelado', 'text-danger', 'bg-danger', 4)`)
+		if err != nil {
+			log.Fatal("Error inserting default contract status:", err)
+		}
+		log.Println("Default contract status created")
 	}
 }
 

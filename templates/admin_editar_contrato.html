@@ -42,19 +42,23 @@
                 <textarea name="payment_conditions" class="form-control" rows="3" required>{{.Contract.PaymentConditions}}</textarea>
               </div>
 
-              <!-- Garantia -->
+              <!-- Garantia - USANDO TABELA -->
               <div class="mb-4">
                 <label class="form-label fw-bold">
                   <i class="bi bi-shield-check me-1"></i>Garantia *
                 </label>
-                <select name="guarantee_type" class="form-select" id="guaranteeType" required onchange="toggleCustomGuarantee()">
-                  <option value="SEGUNDA_TENTATIVA" {{if eq .Contract.GuaranteeType "SEGUNDA_TENTATIVA"}}selected{{end}}>Segunda tentativa sem custo adicional</option>
-                  <option value="SEM_GARANTIA" {{if eq .Contract.GuaranteeType "SEM_GARANTIA"}}selected{{end}}>Sem garantia adicional</option>
-                  <option value="PERSONALIZADA" {{if eq .Contract.GuaranteeType "PERSONALIZADA"}}selected{{end}}>Garantia personalizada</option>
+                <select name="guarantee_type_id" class="form-select" id="guaranteeType" required onchange="toggleCustomGuarantee()">
+                  {{range .GuaranteeTypes}}
+                  <option value="{{.ID}}" 
+                          data-requires-custom="{{.RequiresCustomText}}"
+                          {{if eq .ID $.Contract.GuaranteeTypeID}}selected{{end}}>
+                    {{.Name}}
+                  </option>
+                  {{end}}
                 </select>
               </div>
 
-              <div class="mb-4" id="customGuaranteeDiv" {{if ne .Contract.GuaranteeType "PERSONALIZADA"}}style="display: none;"{{end}}>
+              <div class="mb-4" id="customGuaranteeDiv" {{if not .Contract.GuaranteeType.RequiresCustomText}}style="display: none;"{{end}}>
                 <label class="form-label fw-bold">Descreva a Garantia Personalizada</label>
                 <textarea name="guarantee_custom" class="form-control" rows="2" id="guaranteeCustom">{{if .Contract.GuaranteeCustom.Valid}}{{.Contract.GuaranteeCustom.String}}{{end}}</textarea>
               </div>
@@ -131,10 +135,14 @@
 
   <script>
     function toggleCustomGuarantee() {
-      const type = document.getElementById('guaranteeType').value;
+      const select = document.getElementById('guaranteeType');
+      const selectedOption = select.options[select.selectedIndex];
+      const requiresCustom = selectedOption.getAttribute('data-requires-custom') === 'true';
+      
       const div = document.getElementById('customGuaranteeDiv');
       const input = document.getElementById('guaranteeCustom');
-      if (type === 'PERSONALIZADA') {
+      
+      if (requiresCustom) {
         div.style.display = 'block';
         input.required = true;
       } else {
@@ -142,6 +150,9 @@
         input.required = false;
       }
     }
+    
+    // Inicializar ao carregar
+    document.addEventListener('DOMContentLoaded', toggleCustomGuarantee);
   </script>
 </body>
 </html>

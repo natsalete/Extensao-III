@@ -27,16 +27,7 @@
         <div class="card mb-4" id="contract-content">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contrato {{.Contract.ContractNumber}}</h5>
-            <span class="badge 
-              {{if eq .Contract.Status "RASCUNHO"}}bg-secondary
-              {{else if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}bg-warning text-dark
-              {{else if eq .Contract.Status "ASSINADO"}}bg-success
-              {{else}}bg-danger{{end}}">
-              {{if eq .Contract.Status "RASCUNHO"}}Rascunho
-              {{else if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}Aguardando Assinaturas
-              {{else if eq .Contract.Status "ASSINADO"}}Assinado
-              {{else}}Cancelado{{end}}
-            </span>
+            <span class="badge {{.Contract.Status.BadgeClass}}">{{.Contract.Status.Name}}</span>
           </div>
           <div class="card-body">
             <!-- Dados do Serviço -->
@@ -73,15 +64,11 @@
 
               <h6 class="text-primary mb-3"><i class="bi bi-shield-check me-2"></i>Garantia</h6>
               <p>
-                {{if eq .Contract.GuaranteeType "SEGUNDA_TENTATIVA"}}
-                  <span class="badge bg-success">Segunda tentativa sem custo adicional</span>
-                {{else if eq .Contract.GuaranteeType "SEM_GARANTIA"}}
-                  <span class="badge bg-secondary">Sem garantia adicional</span>
-                {{else}}
-                  <span class="badge bg-info">Garantia personalizada</span>
-                  {{if .Contract.GuaranteeCustom.Valid}}
-                  <br><small class="text-muted mt-2 d-block">{{.Contract.GuaranteeCustom.String}}</small>
-                  {{end}}
+                {{if .Contract.GuaranteeType}}
+                <span class="badge bg-info fs-6">{{.Contract.GuaranteeType.Name}}</span>
+                {{if .Contract.GuaranteeCustom.Valid}}
+                <br><small class="text-muted mt-2 d-block">{{.Contract.GuaranteeCustom.String}}</small>
+                {{end}}
                 {{end}}
               </p>
 
@@ -125,17 +112,13 @@
                     {{if .CompanySignatureData}}
                     <img src="data:image/png;base64,{{.CompanySignatureData}}" 
                          alt="Assinatura Empresa" 
-                         class="img-fluid signature-img" 
-                         onerror="console.error('Erro ao carregar assinatura da empresa'); this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <div class="signature-error" style="display:none;">
-                      <i class="bi bi-exclamation-triangle"></i> Erro ao carregar assinatura
-                    </div>
+                         class="img-fluid signature-img">
                     {{else}}
                     <p class="text-muted">Assinatura não disponível</p>
                     {{end}}
                   </div>
                   <small class="text-success"><i class="bi bi-check-circle-fill"></i> Assinado em {{.Contract.CompanySignedAt.Time.Format "02/01/2006 15:04"}}</small>
-                  {{else if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}
+                  {{else if eq .Contract.Status.Code "AGUARDANDO_ASSINATURAS"}}
                   <div class="my-3">
                     <button class="btn btn-primary no-print" data-bs-toggle="modal" data-bs-target="#signCompanyModal">
                       <i class="bi bi-pen me-2"></i>Assinar
@@ -156,11 +139,7 @@
                     {{if .ClientSignatureData}}
                     <img src="data:image/png;base64,{{.ClientSignatureData}}" 
                          alt="Assinatura Cliente" 
-                         class="img-fluid signature-img" 
-                         onerror="console.error('Erro ao carregar assinatura do cliente'); this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <div class="signature-error" style="display:none;">
-                      <i class="bi bi-exclamation-triangle"></i> Erro ao carregar assinatura
-                    </div>
+                         class="img-fluid signature-img">
                     {{else}}
                     <p class="text-muted">Assinatura não disponível</p>
                     {{end}}
@@ -173,7 +152,7 @@
               </div>
             </div>
 
-            {{if eq .Contract.Status "ASSINADO"}}
+            {{if eq .Contract.Status.Code "ASSINADO"}}
             <div class="alert alert-success mt-4 text-center">
               <i class="bi bi-check-circle-fill me-2 fs-4"></i>
               <strong>Contrato Finalizado!</strong><br>
@@ -193,7 +172,7 @@
           </div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              {{if eq .Contract.Status "ASSINADO"}}
+              {{if eq .Contract.Status.Code "ASSINADO"}}
               <button onclick="printContract()" class="btn btn-success">
                 <i class="bi bi-printer me-2"></i>Imprimir / Salvar PDF
               </button>
@@ -205,7 +184,7 @@
               </a>
               {{end}}
               
-              {{if eq .Contract.Status "RASCUNHO"}}
+              {{if eq .Contract.Status.Code "RASCUNHO"}}
               <form method="POST" action="/admin/contratos/{{.Contract.ID}}/enviar-assinatura" onsubmit="return confirm('Enviar contrato para assinatura?')">
                 <button type="submit" class="btn btn-primary w-100">
                   <i class="bi bi-send me-2"></i>Enviar para Assinatura
@@ -216,19 +195,11 @@
               <a href="/admin/contratos" class="btn btn-secondary">
                 <i class="bi bi-arrow-left me-2"></i>Voltar
               </a>
-
-              {{if eq .Contract.Status "ASSINADO"}}
-              <hr>
-              <button onclick="diagnoseSignatures()" class="btn btn-outline-info btn-sm w-100">
-                <i class="bi bi-bug me-1"></i>Diagnosticar Assinaturas
-              </button>
-              {{end}}
             </div>
           </div>
         </div>
 
-        <!-- Info Solicitação -->
-        {{if .Contract.ServiceRequest}}
+        <!-- Info Contrato -->
         <div class="card no-print">
           <div class="card-header bg-light">
             <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informações do Contrato</h6>
@@ -240,17 +211,10 @@
             <hr>
             <p><strong>ID Solicitação:</strong> #{{.Contract.ServiceRequestID}}</p>
             <p class="mb-0"><strong>Status:</strong> 
-              <span class="badge 
-                {{if eq .Contract.Status "RASCUNHO"}}bg-secondary
-                {{else if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}bg-warning text-dark
-                {{else if eq .Contract.Status "ASSINADO"}}bg-success
-                {{else}}bg-danger{{end}}">
-                {{.Contract.Status}}
-              </span>
+              <span class="badge {{.Contract.Status.BadgeClass}}">{{.Contract.Status.Name}}</span>
             </p>
           </div>
         </div>
-        {{end}}
       </div>
     </div>
   </div>
@@ -272,7 +236,6 @@
             
             <p class="fw-bold mb-3">Desenhe a assinatura da empresa no quadro abaixo:</p>
             
-            <!-- Canvas container com proporção fixa -->
             <div class="signature-canvas-container border rounded mb-3">
               <canvas id="signaturePad"></canvas>
             </div>
@@ -300,19 +263,16 @@
   {{template "footer" .}}
   {{template "scripts" .}}
 
-  <!-- SignaturePad Library -->
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
   
   <script>
     let signaturePad;
 
-    // Inicializar quando o modal abrir
     document.addEventListener('DOMContentLoaded', function() {
       const modalEl = document.getElementById('signCompanyModal');
       
       if (modalEl) {
         modalEl.addEventListener('shown.bs.modal', function () {
-          console.log('Modal aberto, inicializando canvas...');
           setTimeout(initSignaturePad, 100);
         });
       }
@@ -320,11 +280,7 @@
 
     function initSignaturePad() {
       const canvas = document.getElementById('signaturePad');
-      
-      if (!canvas) {
-        console.error('Canvas não encontrado!');
-        return;
-      }
+      if (!canvas) return;
 
       const container = canvas.parentElement;
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
@@ -333,54 +289,33 @@
       canvas.height = 200 * ratio;
       canvas.style.width = container.offsetWidth + 'px';
       canvas.style.height = '200px';
-      
-      console.log('Canvas dimensões:', canvas.width, 'x', canvas.height);
 
       signaturePad = new SignaturePad(canvas, {
         backgroundColor: 'rgb(255, 255, 255)',
         penColor: 'rgb(0, 0, 0)',
         minWidth: 0.5,
         maxWidth: 2.5,
-        throttle: 0,
-        minDistance: 0,
       });
 
       const ctx = canvas.getContext('2d');
       ctx.scale(ratio, ratio);
-
-      console.log('SignaturePad inicializado');
     }
 
     function clearSignature() {
-      if (signaturePad) {
-        signaturePad.clear();
-        console.log('Assinatura limpa');
-      }
+      if (signaturePad) signaturePad.clear();
     }
 
     function saveSignature(event) {
       event.preventDefault();
       
-      if (!signaturePad) {
-        alert('Erro: Canvas de assinatura não foi inicializado.');
-        return;
-      }
-
-      if (signaturePad.isEmpty()) {
+      if (!signaturePad || signaturePad.isEmpty()) {
         alert('Por favor, desenhe a assinatura antes de confirmar.');
         return;
       }
 
-      try {
-        const dataURL = signaturePad.toDataURL('image/png');
-        console.log('✅ Assinatura empresa capturada:', dataURL.length, 'caracteres');
-        
-        document.getElementById('signatureInput').value = dataURL;
-        document.getElementById('signCompanyForm').submit();
-      } catch (error) {
-        console.error('Erro ao salvar assinatura:', error);
-        alert('Erro ao processar assinatura: ' + error.message);
-      }
+      const dataURL = signaturePad.toDataURL('image/png');
+      document.getElementById('signatureInput').value = dataURL;
+      document.getElementById('signCompanyForm').submit();
     }
   </script>
 </body>

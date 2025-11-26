@@ -27,14 +27,9 @@
         <div class="card mb-4" id="contract-content">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contrato {{.Contract.ContractNumber}}</h5>
-            <span class="badge 
-              {{if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}bg-warning text-dark
-              {{else if eq .Contract.Status "ASSINADO"}}bg-success
-              {{else}}bg-secondary{{end}}">
-              {{if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}Aguardando Assinaturas
-              {{else if eq .Contract.Status "ASSINADO"}}Assinado
-              {{else}}{{.Contract.Status}}{{end}}
-            </span>
+            {{if .Contract.Status}}
+            <span class="badge {{.Contract.Status.BadgeClass}}">{{.Contract.Status.Name}}</span>
+            {{end}}
           </div>
           <div class="card-body">
             <!-- Dados do Serviço -->
@@ -69,15 +64,11 @@
 
             <h6 class="text-primary mb-3"><i class="bi bi-shield-check me-2"></i>Garantia</h6>
             <p>
-              {{if eq .Contract.GuaranteeType "SEGUNDA_TENTATIVA"}}
-                <span class="badge bg-success fs-6">Segunda tentativa sem custo adicional</span>
-              {{else if eq .Contract.GuaranteeType "SEM_GARANTIA"}}
-                <span class="badge bg-secondary fs-6">Sem garantia adicional</span>
-              {{else}}
-                <span class="badge bg-info fs-6">Garantia personalizada</span>
-                {{if .Contract.GuaranteeCustom.Valid}}
-                <p class="mt-2">{{.Contract.GuaranteeCustom.String}}</p>
-                {{end}}
+              {{if .Contract.GuaranteeType}}
+              <span class="badge bg-info fs-6">{{.Contract.GuaranteeType.Name}}</span>
+              {{if .Contract.GuaranteeCustom.Valid}}
+              <p class="mt-2">{{.Contract.GuaranteeCustom.String}}</p>
+              {{end}}
               {{end}}
             </p>
 
@@ -155,7 +146,9 @@
                     {{end}}
                   </div>
                   <small class="text-success"><i class="bi bi-check-circle-fill"></i> Assinado em {{.Contract.ClientSignedAt.Time.Format "02/01/2006 15:04"}}</small>
-                  {{else if eq .Contract.Status "AGUARDANDO_ASSINATURAS"}}
+                  {{else}}
+                  {{if .Contract.Status}}
+                  {{if eq .Contract.Status.Code "AGUARDANDO_ASSINATURAS"}}
                   <div class="my-3">
                     <button class="btn btn-success btn-lg no-print" data-bs-toggle="modal" data-bs-target="#signClientModal">
                       <i class="bi bi-pen me-2"></i>Assinar Contrato
@@ -165,16 +158,20 @@
                   {{else}}
                   <p class="text-muted my-3"><i class="bi bi-hourglass"></i> Aguardando</p>
                   {{end}}
+                  {{end}}
+                  {{end}}
                 </div>
               </div>
             </div>
 
-            {{if eq .Contract.Status "ASSINADO"}}
+            {{if .Contract.Status}}
+            {{if eq .Contract.Status.Code "ASSINADO"}}
             <div class="alert alert-success mt-4 text-center">
               <i class="bi bi-check-circle-fill me-2 fs-4"></i>
               <strong>Contrato Finalizado!</strong><br>
               Ambas as partes assinaram. O serviço está aprovado.
             </div>
+            {{end}}
             {{end}}
           </div>
         </div>
@@ -190,14 +187,22 @@
             <p><strong>Nº Contrato:</strong> {{.Contract.ContractNumber}}</p>
             <p><strong>Criado em:</strong> {{.Contract.CreatedAt.Format "02/01/2006 15:04"}}</p>
             <p><strong>Última atualização:</strong> {{.Contract.UpdatedAt.Format "02/01/2006 15:04"}}</p>
+            {{if .Contract.Status}}
+            <hr>
+            <p class="mb-0"><strong>Status:</strong><br>
+              <span class="badge {{.Contract.Status.BadgeClass}} mt-1">{{.Contract.Status.Name}}</span>
+            </p>
+            {{end}}
           </div>
         </div>
 
         <div class="d-grid gap-2 no-print">
-          {{if eq .Contract.Status "ASSINADO"}}
+          {{if .Contract.Status}}
+          {{if eq .Contract.Status.Code "ASSINADO"}}
           <button onclick="printContract()" class="btn btn-success">
             <i class="bi bi-printer me-2"></i>Imprimir / Salvar PDF
           </button>
+          {{end}}
           {{end}}
           <a href="/contratos" class="btn btn-secondary">
             <i class="bi bi-arrow-left me-2"></i>Voltar
@@ -205,18 +210,12 @@
           <a href="/dashboard/cliente" class="btn btn-outline-primary">
             <i class="bi bi-speedometer2 me-2"></i>Dashboard
           </a>
-          
-          {{if eq .Contract.Status "ASSINADO"}}
-          <button onclick="diagnoseSignatures()" class="btn btn-outline-info btn-sm">
-            <i class="bi bi-bug me-1"></i>Diagnosticar Assinaturas
-          </button>
-          {{end}}
         </div>
       </div>
     </div>
   </div>
 
-<!-- Modal Assinatura Cliente -->
+  <!-- Modal Assinatura Cliente -->
   <div class="modal fade" id="signClientModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
@@ -345,7 +344,33 @@
         alert('Erro ao processar assinatura: ' + error.message);
       }
     }
+
+    // Função para imprimir contrato
+    function printContract() {
+      window.print();
+    }
   </script>
+
+  <style>
+    .signature-canvas-container {
+      background: white;
+      position: relative;
+    }
+    
+    .signature-img {
+      max-height: 150px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 10px;
+      background: white;
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
 </body>
 </html>
 {{end}}

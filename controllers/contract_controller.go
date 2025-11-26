@@ -140,23 +140,32 @@ func (c *ContractController) showCreateForm(w http.ResponseWriter, r *http.Reque
 	session, _ := config.GetSessionStore().Get(r, "session")
 	userName := session.Values["user_name"].(string)
 
+	// Buscar tipos de garantia disponíveis
+	guaranteeTypes, err := c.ContractModel.GetAllGuaranteeTypes()
+	if err != nil {
+		http.Error(w, "Erro ao buscar tipos de garantia", http.StatusInternalServerError)
+		return
+	}
+
 	data := struct {
-		Service     *models.ServiceRequest
-		UserName    string
-		PageTitle   string
-		CustomCSS   string
-		CustomJS    string
-		CurrentYear int
-		IsAdmin     bool
+		Service        *models.ServiceRequest
+		GuaranteeTypes []models.GuaranteeType
+		UserName       string
+		PageTitle      string
+		CustomCSS      string
+		CustomJS       string
+		CurrentYear    int
+		IsAdmin        bool
 		AdditionalScripts []string
 	}{
-		Service:     service,
-		UserName:    userName,
-		PageTitle:   "Criar Contrato",
-		CustomCSS:   "/static/css/contracts.css",
-		CustomJS:    "/static/js/contracts.js",
-		CurrentYear: time.Now().Year(),
-		IsAdmin:     true,
+		Service:        service,
+		GuaranteeTypes: guaranteeTypes,
+		UserName:       userName,
+		PageTitle:      "Criar Contrato",
+		CustomCSS:      "/static/css/contracts.css",
+		CustomJS:       "/static/js/contracts.js",
+		CurrentYear:    time.Now().Year(),
+		IsAdmin:        true,
 		AdditionalScripts: []string{},
 	}
 
@@ -176,12 +185,13 @@ func (c *ContractController) processCreateContract(w http.ResponseWriter, r *htt
 	}
 
 	totalValue, _ := strconv.ParseFloat(r.FormValue("total_value"), 64)
+	guaranteeTypeID, _ := strconv.Atoi(r.FormValue("guarantee_type_id"))
 
 	contract := &models.Contract{
 		ServiceRequestID:   serviceRequestID,
 		TotalValue:         totalValue,
 		PaymentConditions:  r.FormValue("payment_conditions"),
-		GuaranteeType:      r.FormValue("guarantee_type"),
+		GuaranteeTypeID:    guaranteeTypeID,
 		GuaranteeCustom:    toNullString(r.FormValue("guarantee_custom")),
 		ClientRequirements: toNullString(r.FormValue("client_requirements")),
 		MaterialsUsed:      toNullString(r.FormValue("materials_used")),
@@ -204,14 +214,12 @@ func (c *ContractController) processCreateContract(w http.ResponseWriter, r *htt
 func prepareContractForView(contract *models.Contract) map[string]interface{} {
 	data := make(map[string]interface{})
 	
-	// Extrair apenas o base64 das assinaturas (remover o prefixo data:image/png;base64,)
 	if contract.CompanySignature.Valid && contract.CompanySignature.String != "" {
 		base64Data := extractBase64(contract.CompanySignature.String)
 		data["CompanySignatureData"] = base64Data
 		log.Printf("🔵 Assinatura empresa processada: %d caracteres", len(base64Data))
 	} else {
 		data["CompanySignatureData"] = ""
-		log.Printf("⚠️ Assinatura empresa não disponível")
 	}
 	
 	if contract.ClientSignature.Valid && contract.ClientSignature.String != "" {
@@ -220,29 +228,22 @@ func prepareContractForView(contract *models.Contract) map[string]interface{} {
 		log.Printf("🔵 Assinatura cliente processada: %d caracteres", len(base64Data))
 	} else {
 		data["ClientSignatureData"] = ""
-		log.Printf("⚠️ Assinatura cliente não disponível")
 	}
 	
 	return data
 }
 
-// extractBase64 remove o prefixo data:image/png;base64, se existir
 func extractBase64(dataURL string) string {
-	// Remover prefixo se existir
 	if strings.HasPrefix(dataURL, "data:image/png;base64,") {
 		return strings.TrimPrefix(dataURL, "data:image/png;base64,")
 	}
-	// Se já for só base64, retorna como está
 	return dataURL
 }
 
-// validateBase64 verifica se é um base64 válido
 func validateBase64(s string) bool {
 	_, err := base64.StdEncoding.DecodeString(s)
 	return err == nil
 }
-
-
 
 // ViewContract - Ver detalhes do contrato (ADMIN)
 func (c *ContractController) ViewContract(w http.ResponseWriter, r *http.Request) {
@@ -265,7 +266,6 @@ func (c *ContractController) ViewContract(w http.ResponseWriter, r *http.Request
 	session, _ := config.GetSessionStore().Get(r, "session")
 	userName := session.Values["user_name"].(string)
 
-	// Preparar assinaturas
 	signatureData := prepareContractForView(contract)
 	
 	companySignatureData := ""
@@ -315,7 +315,6 @@ func (c *ContractController) ViewContract(w http.ResponseWriter, r *http.Request
 	}, data)
 }
 
-
 // EditContract - Editar contrato
 func (c *ContractController) EditContract(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -348,26 +347,35 @@ func (c *ContractController) showEditForm(w http.ResponseWriter, r *http.Request
 	service, _ := c.ServiceModel.GetByID(contract.ServiceRequestID)
 	contract.ServiceRequest = service
 
+	// Buscar tipos de garantia disponíveis
+	guaranteeTypes, err := c.ContractModel.GetAllGuaranteeTypes()
+	if err != nil {
+		http.Error(w, "Erro ao buscar tipos de garantia", http.StatusInternalServerError)
+		return
+	}
+
 	session, _ := config.GetSessionStore().Get(r, "session")
 	userName := session.Values["user_name"].(string)
 
 	data := struct {
-		Contract    *models.Contract
-		UserName    string
-		PageTitle   string
-		CustomCSS   string
-		CustomJS    string
-		CurrentYear int
-		IsAdmin     bool
+		Contract       *models.Contract
+		GuaranteeTypes []models.GuaranteeType
+		UserName       string
+		PageTitle      string
+		CustomCSS      string
+		CustomJS       string
+		CurrentYear    int
+		IsAdmin        bool
 		AdditionalScripts []string
 	}{
-		Contract:    contract,
-		UserName:    userName,
-		PageTitle:   "Editar Contrato",
-		CustomCSS:   "/static/css/contracts.css",
-		CustomJS:    "/static/js/contracts.js",
-		CurrentYear: time.Now().Year(),
-		IsAdmin:     true,
+		Contract:       contract,
+		GuaranteeTypes: guaranteeTypes,
+		UserName:       userName,
+		PageTitle:      "Editar Contrato",
+		CustomCSS:      "/static/css/contracts.css",
+		CustomJS:       "/static/js/contracts.js",
+		CurrentYear:    time.Now().Year(),
+		IsAdmin:        true,
 		AdditionalScripts: []string{},
 	}
 
@@ -387,10 +395,11 @@ func (c *ContractController) processEditContract(w http.ResponseWriter, r *http.
 	}
 
 	totalValue, _ := strconv.ParseFloat(r.FormValue("total_value"), 64)
+	guaranteeTypeID, _ := strconv.Atoi(r.FormValue("guarantee_type_id"))
 
 	contract.TotalValue = totalValue
 	contract.PaymentConditions = r.FormValue("payment_conditions")
-	contract.GuaranteeType = r.FormValue("guarantee_type")
+	contract.GuaranteeTypeID = guaranteeTypeID
 	contract.GuaranteeCustom = toNullString(r.FormValue("guarantee_custom"))
 	contract.ClientRequirements = toNullString(r.FormValue("client_requirements"))
 	contract.MaterialsUsed = toNullString(r.FormValue("materials_used"))
@@ -424,7 +433,6 @@ func (c *ContractController) SendForSignature(w http.ResponseWriter, r *http.Req
 	}
 	log.Printf("✅ ID convertido: %d", contractID)
 	
-	// Verificar se o contrato existe antes de enviar
 	log.Println("🔍 Buscando contrato...")
 	contract, err := c.ContractModel.GetByID(contractID)
 	if err != nil {
@@ -432,12 +440,11 @@ func (c *ContractController) SendForSignature(w http.ResponseWriter, r *http.Req
 		http.Error(w, "Contrato não encontrado: "+err.Error(), http.StatusNotFound)
 		return
 	}
-	log.Printf("✅ Contrato encontrado: #%d | Status: %s", contract.ID, contract.Status)
+	log.Printf("✅ Contrato encontrado: #%d | Status: %s", contract.ID, contract.Status.Code)
 	
-	// Verificar se está em rascunho
-	if contract.Status != "RASCUNHO" {
-		log.Printf("⚠️ Contrato não está em RASCUNHO. Status atual: %s", contract.Status)
-		http.Error(w, fmt.Sprintf("Contrato não pode ser enviado - status atual: %s", contract.Status), http.StatusBadRequest)
+	if contract.Status.Code != "RASCUNHO" {
+		log.Printf("⚠️ Contrato não está em RASCUNHO. Status atual: %s", contract.Status.Code)
+		http.Error(w, fmt.Sprintf("Contrato não pode ser enviado - status atual: %s", contract.Status.Code), http.StatusBadRequest)
 		return
 	}
 	
@@ -450,7 +457,6 @@ func (c *ContractController) SendForSignature(w http.ResponseWriter, r *http.Req
 	}
 	log.Println("✅ Status atualizado com sucesso!")
 
-	// Adicionar histórico
 	session, err := config.GetSessionStore().Get(r, "session")
 	if err != nil {
 		log.Printf("⚠️ Erro ao obter sessão: %v", err)
@@ -500,13 +506,56 @@ func (c *ContractController) SignContractCompany(w http.ResponseWriter, r *http.
 	http.Redirect(w, r, fmt.Sprintf("/admin/contratos/%d?success=signed", contractID), http.StatusFound)
 }
 
+// Helpers
+func (c *ContractController) getSuccessMsg(r *http.Request) string {
+	switch r.URL.Query().Get("success") {
+	case "created":
+		return "Contrato criado com sucesso!"
+	case "updated":
+		return "Contrato atualizado com sucesso!"
+	case "sent":
+		return "Contrato enviado para assinatura!"
+	case "signed":
+		return "Contrato assinado com sucesso!"
+	default:
+		return ""
+	}
+}
+
+func (c *ContractController) renderTemplate(w http.ResponseWriter, paths []string, data interface{}) {
+	tmpl := template.New("").Funcs(GetTemplateFuncs())
+	tmpl, err := tmpl.ParseFiles(paths...)
+	if err != nil {
+		http.Error(w, "Erro ao carregar template: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	baseName := filepath.Base(paths[len(paths)-1])
+	if err := tmpl.ExecuteTemplate(w, baseName, data); err != nil {
+		http.Error(w, "Erro ao renderizar: "+err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func toNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{Valid: false}
+	}
+	return sql.NullString{String: s, Valid: true}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+
 // ClientContracts - Lista TODOS os contratos do cliente com filtros e paginação
 func (c *ContractController) ClientContracts(w http.ResponseWriter, r *http.Request) {
 	session, _ := config.GetSessionStore().Get(r, "session")
 	userID := session.Values["user_id"].(int)
 	userName := session.Values["user_name"].(string)
 
-	// Capturar filtros
 	statusFilter := r.URL.Query().Get("status")
 	pageStr := r.URL.Query().Get("page")
 
@@ -520,7 +569,6 @@ func (c *ContractController) ClientContracts(w http.ResponseWriter, r *http.Requ
 	pageSize := 9
 	offset := (page - 1) * pageSize
 
-	// Buscar contratos do cliente
 	contracts, totalCount, err := c.ContractModel.GetAllByUserID(userID, statusFilter, pageSize, offset)
 	if err != nil {
 		http.Error(w, "Erro ao buscar contratos", http.StatusInternalServerError)
@@ -578,7 +626,7 @@ func (c *ContractController) ClientContracts(w http.ResponseWriter, r *http.Requ
 	}, data)
 }
 
-// ClientViewContract - Cliente visualiza contrato (CORRIGIDO)
+// ClientViewContract - Cliente visualiza contrato
 func (c *ContractController) ClientViewContract(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	contractID, _ := strconv.Atoi(vars["id"])
@@ -600,27 +648,16 @@ func (c *ContractController) ClientViewContract(w http.ResponseWriter, r *http.R
 	}
 	contract.ServiceRequest = service
 
-	// ============================================
-	// CORREÇÃO: Preparar assinaturas corretamente
-	// ============================================
 	signatureData := prepareContractForView(contract)
 	
-	// Extrair com segurança
 	companySignatureData := ""
 	clientSignatureData := ""
 	
 	if val, ok := signatureData["CompanySignatureData"].(string); ok {
 		companySignatureData = val
-		log.Printf("✅ Assinatura empresa preparada: %d caracteres", len(companySignatureData))
-	} else {
-		log.Printf("⚠️ Assinatura empresa não disponível")
 	}
-	
 	if val, ok := signatureData["ClientSignatureData"].(string); ok {
 		clientSignatureData = val
-		log.Printf("✅ Assinatura cliente preparada: %d caracteres", len(clientSignatureData))
-	} else {
-		log.Printf("⚠️ Assinatura cliente não disponível")
 	}
 
 	data := struct {
@@ -638,7 +675,7 @@ func (c *ContractController) ClientViewContract(w http.ResponseWriter, r *http.R
 	}{
 		Contract:             contract,
 		CompanySignatureData: companySignatureData,
-		ClientSignatureData:  clientSignatureData, // ← CORRIGIDO
+		ClientSignatureData:  clientSignatureData,
 		UserName:             userName,
 		PageTitle:            "Contrato " + contract.ContractNumber,
 		CustomCSS:            "/static/css/contracts.css",
@@ -658,6 +695,7 @@ func (c *ContractController) ClientViewContract(w http.ResponseWriter, r *http.R
 	}, data)
 }
 
+// ClientSignContract - Cliente assina o contrato
 func (c *ContractController) ClientSignContract(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	contractID, _ := strconv.Atoi(vars["id"])
@@ -674,7 +712,6 @@ func (c *ContractController) ClientSignContract(w http.ResponseWriter, r *http.R
 
 	signature := r.FormValue("signature")
 	
-	// LOGS DE DEBUG
 	log.Printf("🔵 Assinatura do cliente recebida")
 	log.Printf("📏 Tamanho: %d caracteres", len(signature))
 	log.Printf("📝 Prefixo: %s", signature[:min(50, len(signature))])
@@ -684,7 +721,6 @@ func (c *ContractController) ClientSignContract(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// Validar se é base64 válido
 	base64Data := extractBase64(signature)
 	if !validateBase64(base64Data) {
 		log.Printf("❌ Base64 inválido!")
@@ -704,48 +740,3 @@ func (c *ContractController) ClientSignContract(w http.ResponseWriter, r *http.R
 
 	http.Redirect(w, r, fmt.Sprintf("/contratos/%d?success=signed", contractID), http.StatusFound)
 }
-
-// Helper min
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-// Helpers
-func (c *ContractController) getSuccessMsg(r *http.Request) string {
-	switch r.URL.Query().Get("success") {
-	case "created":
-		return "Contrato criado com sucesso!"
-	case "updated":
-		return "Contrato atualizado com sucesso!"
-	case "sent":
-		return "Contrato enviado para assinatura!"
-	case "signed":
-		return "Contrato assinado com sucesso!"
-	default:
-		return ""
-	}
-}
-
-func (c *ContractController) renderTemplate(w http.ResponseWriter, paths []string, data interface{}) {
-	tmpl := template.New("").Funcs(GetTemplateFuncs())
-	tmpl, err := tmpl.ParseFiles(paths...)
-	if err != nil {
-		http.Error(w, "Erro ao carregar template: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	baseName := filepath.Base(paths[len(paths)-1])
-	if err := tmpl.ExecuteTemplate(w, baseName, data); err != nil {
-		http.Error(w, "Erro ao renderizar: "+err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func toNullString(s string) sql.NullString {
-	if s == "" {
-		return sql.NullString{Valid: false}
-	}
-	return sql.NullString{String: s, Valid: true}
-}
-

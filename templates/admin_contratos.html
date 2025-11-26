@@ -95,14 +95,8 @@
                 </td>
                 <td><strong class="text-success">R$ {{printf "%.2f" .TotalValue}}</strong></td>
                 <td>
-                  {{if eq .Status "RASCUNHO"}}
-                  <span class="badge bg-secondary">Rascunho</span>
-                  {{else if eq .Status "AGUARDANDO_ASSINATURAS"}}
-                  <span class="badge bg-warning text-dark">Aguardando Assinaturas</span>
-                  {{else if eq .Status "ASSINADO"}}
-                  <span class="badge bg-success">Assinado</span>
-                  {{else}}
-                  <span class="badge bg-danger">Cancelado</span>
+                  {{if .Status}}
+                  <span class="badge {{.Status.BadgeClass}}">{{.Status.Name}}</span>
                   {{end}}
                 </td>
                 <td>
@@ -125,10 +119,12 @@
                     <a href="/admin/contratos/{{.ID}}" class="btn btn-sm btn-outline-primary" title="Ver">
                       <i class="bi bi-eye-fill"></i>
                     </a>
-                    {{if eq .Status "RASCUNHO"}}
+                    {{if .Status}}
+                    {{if eq .Status.Code "RASCUNHO"}}
                     <a href="/admin/contratos/{{.ID}}/editar" class="btn btn-sm btn-outline-warning" title="Editar">
                       <i class="bi bi-pencil-fill"></i>
                     </a>
+                    {{end}}
                     {{end}}
                   </div>
                 </td>

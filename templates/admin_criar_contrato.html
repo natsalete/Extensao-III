@@ -43,17 +43,18 @@
                 <small class="text-muted">Ex: Sinal de R$ 3.500,00 após se tornar o quarto na fila. Restante R$ 5.500,00 após conclusão.</small>
               </div>
 
-              <!-- Garantia -->
+              <!-- Garantia - USANDO TABELA -->
               <div class="mb-4">
                 <label class="form-label fw-bold">
                   <i class="bi bi-shield-check me-1"></i>Garantia *
                 </label>
-                <select name="guarantee_type" class="form-select" id="guaranteeType" required onchange="toggleCustomGuarantee()">
+                <select name="guarantee_type_id" class="form-select" id="guaranteeType" required onchange="toggleCustomGuarantee()">
                   <option value="">Selecione uma opção</option>
-                  <option value="SEGUNDA_TENTATIVA">Segunda tentativa sem custo adicional</option>
-                  <option value="SEM_GARANTIA">Sem garantia adicional</option>
-                  <option value="PERSONALIZADA">Garantia personalizada</option>
+                  {{range .GuaranteeTypes}}
+                  <option value="{{.ID}}" data-requires-custom="{{.RequiresCustomText}}">{{.Name}}</option>
+                  {{end}}
                 </select>
+                <small class="text-muted">Selecione o tipo de garantia para este contrato</small>
               </div>
 
               <div class="mb-4" id="customGuaranteeDiv" style="display: none;">
@@ -138,10 +139,14 @@
 
   <script>
     function toggleCustomGuarantee() {
-      const type = document.getElementById('guaranteeType').value;
+      const select = document.getElementById('guaranteeType');
+      const selectedOption = select.options[select.selectedIndex];
+      const requiresCustom = selectedOption.getAttribute('data-requires-custom') === 'true';
+      
       const div = document.getElementById('customGuaranteeDiv');
       const input = document.getElementById('guaranteeCustom');
-      if (type === 'PERSONALIZADA') {
+      
+      if (requiresCustom) {
         div.style.display = 'block';
         input.required = true;
       } else {
