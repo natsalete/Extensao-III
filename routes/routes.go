@@ -72,6 +72,11 @@ func SetupRoutes() *mux.Router {
 		middleware.RequireAuth(middleware.RequireAdmin(contractController.SendForSignature))).Methods("POST")
 	r.HandleFunc("/admin/contratos/{id:[0-9]+}/assinar-empresa", 
 		middleware.RequireAuth(middleware.RequireAdmin(contractController.SignContractCompany))).Methods("POST")
+	
+	// ⚠️ NOVA ROTA: Admin resolve observação do cliente
+	r.HandleFunc("/admin/contratos/{id:[0-9]+}/observacao/{obs_id:[0-9]+}/resolver", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.ResolveObservation))).Methods("POST")
+	
 	r.HandleFunc("/admin/contratos/{id:[0-9]+}", 
 		middleware.RequireAuth(middleware.RequireAdmin(contractController.ViewContract))).Methods("GET")
 	
@@ -93,10 +98,21 @@ func SetupRoutes() *mux.Router {
 		middleware.RequireAuth(middleware.RequireClient(serviceController.VerSolicitacao))).Methods("GET")
 	
 	// Client contract routes - ORDEM IMPORTANTE!
+	// Rotas mais específicas DEVEM vir ANTES das genéricas
 	r.HandleFunc("/contratos", 
 		middleware.RequireAuth(middleware.RequireClient(contractController.ClientContracts))).Methods("GET")
+	
+	// ⚠️ NOVAS ROTAS: Observações do cliente (DEVEM vir ANTES de /contratos/{id})
+	r.HandleFunc("/contratos/{id:[0-9]+}/observacao", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.AddClientObservation))).Methods("POST")
+	r.HandleFunc("/contratos/{id:[0-9]+}/observacao/{obs_id:[0-9]+}/deletar", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.DeleteClientObservation))).Methods("POST")
+	
+	// Assinar contrato
 	r.HandleFunc("/contratos/{id:[0-9]+}/assinar", 
 		middleware.RequireAuth(middleware.RequireClient(contractController.ClientSignContract))).Methods("POST")
+	
+	// Ver contrato (rota genérica deve vir POR ÚLTIMO)
 	r.HandleFunc("/contratos/{id:[0-9]+}", 
 		middleware.RequireAuth(middleware.RequireClient(contractController.ClientViewContract))).Methods("GET")
 

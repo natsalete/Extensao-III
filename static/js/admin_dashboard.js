@@ -7,23 +7,47 @@ function clearFilters() {
   window.location.href = '/dashboard/admin';
 }
 
-// Abrir modal de alteração de status
+// ✅ CORRIGIDO - Abrir modal de alteração de status
 function openStatusModal(requestId, currentStatusId, clientName) {
-  document.getElementById('modalRequestId').value = requestId;
-  document.getElementById('modalClientName').textContent = clientName;
-  document.getElementById('modalStatusSelect').value = currentStatusId;
+  // Verificar se os elementos existem antes de usar
+  const modalRequestIdInput = document.querySelector('#statusModal input[name="request_id"]');
+  const modalClientNameSpan = document.getElementById('modalClientName');
+  const modalStatusSelect = document.querySelector('#statusModal select[name="status_id"]');
   
-  const modal = new bootstrap.Modal(document.getElementById('statusModal'));
-  modal.show();
+  if (modalRequestIdInput) {
+    modalRequestIdInput.value = requestId;
+  }
+  
+  if (modalClientNameSpan) {
+    modalClientNameSpan.textContent = clientName;
+  }
+  
+  if (modalStatusSelect) {
+    modalStatusSelect.value = currentStatusId;
+  }
+  
+  // Abrir o modal
+  const modalElement = document.getElementById('statusModal');
+  if (modalElement) {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+  } else {
+    console.error('Modal statusModal não encontrado!');
+  }
 }
 
 // Deletar solicitação
 function deletarSolicitacao(requestId) {
   const deleteForm = document.getElementById('deleteForm');
-  deleteForm.action = `/admin/solicitacao/${requestId}/deletar`;
-  
-  const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-  modal.show();
+  if (deleteForm) {
+    deleteForm.action = `/admin/solicitacao/${requestId}/deletar`;
+    
+    const modalElement = document.getElementById('deleteModal');
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    }
+  }
 }
 
 // Auto-hide success messages
@@ -64,9 +88,7 @@ function exportToCSV() {
     const cols = row.querySelectorAll('td, th');
     const csvRow = [];
     cols.forEach(col => {
-      // Remove HTML tags and get only text
       let text = col.innerText.trim();
-      // Escape quotes
       text = text.replace(/"/g, '""');
       csvRow.push(`"${text}"`);
     });
@@ -131,7 +153,6 @@ function formatTime(timeString) {
 // Copy to clipboard
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    // Show temporary success message
     const toast = document.createElement('div');
     toast.className = 'toast show position-fixed bottom-0 end-0 m-3';
     toast.innerHTML = `
@@ -193,10 +214,8 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Update stats in real-time (if needed)
+// Update stats in real-time
 function updateStats() {
-  // This would typically fetch from an API endpoint
-  // For now, it's just a placeholder
   console.log('Stats updated');
 }
 

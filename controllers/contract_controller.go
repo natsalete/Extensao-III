@@ -210,6 +210,252 @@ func (c *ContractController) processCreateContract(w http.ResponseWriter, r *htt
 	http.Redirect(w, r, fmt.Sprintf("/admin/contratos/%d?success=created", contract.ID), http.StatusFound)
 }
 
+
+// AddClientObservation - Cliente adiciona observação
+func (c *ContractController) AddClientObservation(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	contractID, _ := strconv.Atoi(vars["id"])
+
+	session, _ := config.GetSessionStore().Get(r, "session")
+	userID := session.Values["user_id"].(int)
+
+	// Verificar se o contrato pertence ao usuário
+	contract, err := c.ContractModel.GetByID(contractID)
+	if err != nil {
+		http.Error(w, "Contrato não encontrado", http.StatusNotFound)
+		return
+	}
+
+	service, _ := c.ServiceModel.GetByID(contract.ServiceRequestID)
+	if service.UserID != userID {
+		http.Error(w, "Acesso negado", http.StatusForbidden)
+		return
+	}
+
+	// Verificar se pode adicionar observações
+	canAdd, _ := c.ContractModel.CanAddObservation(contractID)
+	if !canAdd {
+		http.Error(w, "Não é possível adicionar observações após assinatura", http.StatusBadRequest)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Erro ao processar formulário", http.StatusBadRequest)
+		return
+	}
+
+	observation := r.FormValue("observation")
+	if observation == "" {
+		http.Error(w, "Observação não pode ser vazia", http.StatusBadRequest)
+		return
+	}
+
+	if err := c.ContractModel.CreateObservation(contractID, userID, observation); err != nil {
+		http.Error(w, "Erro ao salvar observação", http.StatusInternalServerError)
+		return
+	}
+
+	// Adicionar ao histórico
+	c.ContractModel.AddHistory(contractID, userID, "OBSERVACAO_ADICIONADA", "Cliente adicionou observação")
+
+	http.Redirect(w, r, fmt.Sprintf("/contratos/%d?success=observation_added", contractID), http.StatusFound)
+}
+
+// DeleteClientObservation - Cliente remove sua observação
+func (c *ContractController) DeleteClientObservation(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	observationID, _ := strconv.Atoi(vars["obs_id"])
+	contractID, _ := strconv.Atoi(vars["id"])
+
+	session, _ := config.GetSessionStore().Get(r, "session")
+	userID := session.Values["user_id"].(int)
+
+	if err := c.ContractModel.DeleteObservation(observationID, userID); err != nil {
+		http.Error(w, "Erro ao remover observação", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/contratos/%d?success=observation_deleted", contractID), http.StatusFound)
+}
+
+// ResolveObservation - Admin marca observação como resolvida
+func (c *ContractController) ResolveObservation(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	observationID, _ := strconv.Atoi(vars["obs_id"])
+	contractID, _ := strconv.Atoi(vars["id"])
+
+	session, _ := config.GetSessionStore().Get(r, "session")
+	adminID := session.Values["user_id"].(int)
+
+	if err := c.ContractModel.ResolveObservation(observationID, adminID); err != nil {
+		http.Error(w, "Erro ao resolver observação", http.StatusInternalServerError)
+		return
+	}
+
+	// Adicionar ao histórico
+	c.ContractModel.AddHistory(contractID, adminID, "OBSERVACAO_RESOLVIDA", "Admin resolveu observação do cliente")
+
+	http.Redirect(w, r, fmt.Sprintf("/admin/contratos/%d?success=observation_resolved", contractID), http.StatusFound)
+}
+
+// ViewContract - Ver detalhes do contrato (ADMIN) - ATUALIZADO
+func (c *ContractController) ViewContract(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	contractID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "ID inválido", http.StatusBadRequest)
+		return
+	}
+
+	contract, err := c.ContractModel.GetByID(contractID)
+	if err != nil {
+		http.Error(w, "Contrato não encontrado", http.StatusNotFound)
+		return
+	}
+
+	service, _ := c.ServiceModel.GetByID(contract.ServiceRequestID)
+	contract.ServiceRequest = service
+
+	// Buscar observações
+	observations, _ := c.ContractModel.GetObservationsByContract(contractID)
+	pendingCount, _ := c.ContractModel.GetPendingObservationsCount(contractID)
+
+	session, _ := config.GetSessionStore().Get(r, "session")
+	userName := session.Values["user_name"].(string)
+
+	signatureData := prepareContractForView(contract)
+	
+	companySignatureData := ""
+	clientSignatureData := ""
+	
+	if val, ok := signatureData["CompanySignatureData"].(string); ok {
+		companySignatureData = val
+	}
+	if val, ok := signatureData["ClientSignatureData"].(string); ok {
+		clientSignatureData = val
+	}
+
+	data := struct {
+		Contract                *models.Contract
+		CompanySignatureData    string
+		ClientSignatureData     string
+		Observations            []models.ContractObservation
+		PendingObservationsCount int
+		UserName                string
+		PageTitle               string
+		CustomCSS               string
+		CustomJS                string
+		CurrentYear             int
+		CanEdit                 bool
+		SuccessMsg              string
+		IsAdmin                 bool
+		AdditionalScripts       []string
+	}{
+		Contract:                contract,
+		CompanySignatureData:    companySignatureData,
+		ClientSignatureData:     clientSignatureData,
+		Observations:            observations,
+		PendingObservationsCount: pendingCount,
+		UserName:                userName,
+		PageTitle:               "Contrato " + contract.ContractNumber,
+		CustomCSS:               "/static/css/contracts.css",
+		CustomJS:                "/static/js/contracts.js",
+		CurrentYear:             time.Now().Year(),
+		CanEdit:                 c.ContractModel.CanEdit(contractID),
+		SuccessMsg:              c.getSuccessMsg(r),
+		IsAdmin:                 true,
+		AdditionalScripts:       []string{},
+	}
+
+	c.renderTemplate(w, []string{
+		"templates/components/head.html",
+		"templates/components/navbar.html",
+		"templates/components/footer.html",
+		"templates/components/scripts.html",
+		"templates/admin_ver_contrato.html",
+	}, data)
+}
+
+// ClientViewContract - Cliente visualiza contrato - ATUALIZADO
+func (c *ContractController) ClientViewContract(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	contractID, _ := strconv.Atoi(vars["id"])
+
+	session, _ := config.GetSessionStore().Get(r, "session")
+	userID := session.Values["user_id"].(int)
+	userName := session.Values["user_name"].(string)
+
+	contract, err := c.ContractModel.GetByID(contractID)
+	if err != nil {
+		http.Error(w, "Contrato não encontrado", http.StatusNotFound)
+		return
+	}
+
+	service, _ := c.ServiceModel.GetByID(contract.ServiceRequestID)
+	if service.UserID != userID {
+		http.Error(w, "Acesso negado", http.StatusForbidden)
+		return
+	}
+	contract.ServiceRequest = service
+
+	// Buscar observações
+	observations, _ := c.ContractModel.GetObservationsByContract(contractID)
+	pendingCount, _ := c.ContractModel.GetPendingObservationsCount(contractID)
+	canAddObservation, _ := c.ContractModel.CanAddObservation(contractID)
+
+	signatureData := prepareContractForView(contract)
+	
+	companySignatureData := ""
+	clientSignatureData := ""
+	
+	if val, ok := signatureData["CompanySignatureData"].(string); ok {
+		companySignatureData = val
+	}
+	if val, ok := signatureData["ClientSignatureData"].(string); ok {
+		clientSignatureData = val
+	}
+
+	data := struct {
+		Contract                *models.Contract
+		CompanySignatureData    string
+		ClientSignatureData     string
+		Observations            []models.ContractObservation
+		PendingObservationsCount int
+		CanAddObservation       bool
+		UserName                string
+		PageTitle               string
+		CustomCSS               string
+		CustomJS                string
+		CurrentYear             int
+		SuccessMsg              string
+		IsAdmin                 bool
+		AdditionalScripts       []string
+	}{
+		Contract:                contract,
+		CompanySignatureData:    companySignatureData,
+		ClientSignatureData:     clientSignatureData,
+		Observations:            observations,
+		PendingObservationsCount: pendingCount,
+		CanAddObservation:       canAddObservation,
+		UserName:                userName,
+		PageTitle:               "Contrato " + contract.ContractNumber,
+		CustomCSS:               "/static/css/contracts.css",
+		CustomJS:                "/static/js/contracts.js",
+		CurrentYear:             time.Now().Year(),
+		SuccessMsg:              c.getSuccessMsg(r),
+		IsAdmin:                 false,
+		AdditionalScripts:       []string{},
+	}
+
+	c.renderTemplate(w, []string{
+		"templates/components/head.html",
+		"templates/components/navbar.html",
+		"templates/components/footer.html",
+		"templates/components/scripts.html",
+		"templates/cliente_ver_contrato.html",
+	}, data)
+}
+
 // prepareContractForView processa as assinaturas para exibição segura
 func prepareContractForView(contract *models.Contract) map[string]interface{} {
 	data := make(map[string]interface{})
@@ -243,76 +489,6 @@ func extractBase64(dataURL string) string {
 func validateBase64(s string) bool {
 	_, err := base64.StdEncoding.DecodeString(s)
 	return err == nil
-}
-
-// ViewContract - Ver detalhes do contrato (ADMIN)
-func (c *ContractController) ViewContract(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	contractID, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, "ID inválido", http.StatusBadRequest)
-		return
-	}
-
-	contract, err := c.ContractModel.GetByID(contractID)
-	if err != nil {
-		http.Error(w, "Contrato não encontrado", http.StatusNotFound)
-		return
-	}
-
-	service, _ := c.ServiceModel.GetByID(contract.ServiceRequestID)
-	contract.ServiceRequest = service
-
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userName := session.Values["user_name"].(string)
-
-	signatureData := prepareContractForView(contract)
-	
-	companySignatureData := ""
-	clientSignatureData := ""
-	
-	if val, ok := signatureData["CompanySignatureData"].(string); ok {
-		companySignatureData = val
-	}
-	if val, ok := signatureData["ClientSignatureData"].(string); ok {
-		clientSignatureData = val
-	}
-
-	data := struct {
-		Contract              *models.Contract
-		CompanySignatureData  string
-		ClientSignatureData   string
-		UserName              string
-		PageTitle             string
-		CustomCSS             string
-		CustomJS              string
-		CurrentYear           int
-		CanEdit               bool
-		SuccessMsg            string
-		IsAdmin               bool
-		AdditionalScripts     []string
-	}{
-		Contract:             contract,
-		CompanySignatureData: companySignatureData,
-		ClientSignatureData:  clientSignatureData,
-		UserName:             userName,
-		PageTitle:            "Contrato " + contract.ContractNumber,
-		CustomCSS:            "/static/css/contracts.css",
-		CustomJS:             "/static/js/contracts.js",
-		CurrentYear:          time.Now().Year(),
-		CanEdit:              c.ContractModel.CanEdit(contractID),
-		SuccessMsg:           c.getSuccessMsg(r),
-		IsAdmin:              true,
-		AdditionalScripts:    []string{},
-	}
-
-	c.renderTemplate(w, []string{
-		"templates/components/head.html",
-		"templates/components/navbar.html",
-		"templates/components/footer.html",
-		"templates/components/scripts.html",
-		"templates/admin_ver_contrato.html",
-	}, data)
 }
 
 // EditContract - Editar contrato
@@ -626,75 +802,6 @@ func (c *ContractController) ClientContracts(w http.ResponseWriter, r *http.Requ
 	}, data)
 }
 
-// ClientViewContract - Cliente visualiza contrato
-func (c *ContractController) ClientViewContract(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	contractID, _ := strconv.Atoi(vars["id"])
-
-	session, _ := config.GetSessionStore().Get(r, "session")
-	userID := session.Values["user_id"].(int)
-	userName := session.Values["user_name"].(string)
-
-	contract, err := c.ContractModel.GetByID(contractID)
-	if err != nil {
-		http.Error(w, "Contrato não encontrado", http.StatusNotFound)
-		return
-	}
-
-	service, _ := c.ServiceModel.GetByID(contract.ServiceRequestID)
-	if service.UserID != userID {
-		http.Error(w, "Acesso negado", http.StatusForbidden)
-		return
-	}
-	contract.ServiceRequest = service
-
-	signatureData := prepareContractForView(contract)
-	
-	companySignatureData := ""
-	clientSignatureData := ""
-	
-	if val, ok := signatureData["CompanySignatureData"].(string); ok {
-		companySignatureData = val
-	}
-	if val, ok := signatureData["ClientSignatureData"].(string); ok {
-		clientSignatureData = val
-	}
-
-	data := struct {
-		Contract              *models.Contract
-		CompanySignatureData  string
-		ClientSignatureData   string
-		UserName              string
-		PageTitle             string
-		CustomCSS             string
-		CustomJS              string
-		CurrentYear           int
-		SuccessMsg            string
-		IsAdmin               bool
-		AdditionalScripts     []string
-	}{
-		Contract:             contract,
-		CompanySignatureData: companySignatureData,
-		ClientSignatureData:  clientSignatureData,
-		UserName:             userName,
-		PageTitle:            "Contrato " + contract.ContractNumber,
-		CustomCSS:            "/static/css/contracts.css",
-		CustomJS:             "/static/js/contracts.js",
-		CurrentYear:          time.Now().Year(),
-		SuccessMsg:           c.getSuccessMsg(r),
-		IsAdmin:              false,
-		AdditionalScripts:    []string{},
-	}
-
-	c.renderTemplate(w, []string{
-		"templates/components/head.html",
-		"templates/components/navbar.html",
-		"templates/components/footer.html",
-		"templates/components/scripts.html",
-		"templates/cliente_ver_contrato.html",
-	}, data)
-}
-
 // ClientSignContract - Cliente assina o contrato
 func (c *ContractController) ClientSignContract(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -740,3 +847,5 @@ func (c *ContractController) ClientSignContract(w http.ResponseWriter, r *http.R
 
 	http.Redirect(w, r, fmt.Sprintf("/contratos/%d?success=signed", contractID), http.StatusFound)
 }
+
+

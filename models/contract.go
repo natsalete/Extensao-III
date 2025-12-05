@@ -77,7 +77,118 @@ type ContractModel struct {
 func NewContractModel(db *sql.DB) *ContractModel {
 	return &ContractModel{DB: db}
 }
+// ============================================
+// OBSERVAÇÕES DO CLIENTE
+// ============================================
 
+// ContractObservation representa uma observação do cliente sobre o contrato
+type ContractObservation struct {
+	ID          int       `json:"id"`
+	ContractID  int       `json:"contract_id"`
+	UserID      int       `json:"user_id"`
+	Observation string    `json:"observation"`
+	Resolved    bool      `json:"resolved"`
+	ResolvedAt  sql.NullTime `json:"resolved_at"`
+	ResolvedBy  sql.NullInt32 `json:"resolved_by"`
+	CreatedAt   time.Time `json:"created_at"`
+	
+	// Campos expandidos
+	UserName     string `json:"user_name,omitempty"`
+	ResolverName string `json:"resolver_name,omitempty"`
+}
+
+// CreateObservation adiciona uma nova observação do cliente
+func (m *ContractModel) CreateObservation(contractID, userID int, observation string) error {
+	query := `INSERT INTO contract_client_observations (contract_id, user_id, observation) 
+	          VALUES ($1, $2, $3)`
+	_, err := m.DB.Exec(query, contractID, userID, observation)
+	return err
+}
+
+// GetObservationsByContract retorna todas as observações de um contrato
+func (m *ContractModel) GetObservationsByContract(contractID int) ([]ContractObservation, error) {
+	query := `
+		SELECT 
+			co.id, co.contract_id, co.user_id, co.observation, co.resolved, 
+			co.resolved_at, co.resolved_by, co.created_at,
+			u.name as user_name,
+			COALESCE(ru.name, '') as resolver_name
+		FROM contract_client_observations co
+		JOIN users u ON co.user_id = u.id
+		LEFT JOIN users ru ON co.resolved_by = ru.id
+		WHERE co.contract_id = $1
+		ORDER BY co.created_at DESC`
+	
+	rows, err := m.DB.Query(query, contractID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var observations []ContractObservation
+	for rows.Next() {
+		var obs ContractObservation
+		err := rows.Scan(
+			&obs.ID, &obs.ContractID, &obs.UserID, &obs.Observation, &obs.Resolved,
+			&obs.ResolvedAt, &obs.ResolvedBy, &obs.CreatedAt,
+			&obs.UserName, &obs.ResolverName,
+		)
+		if err != nil {
+			return nil, err
+		}
+		observations = append(observations, obs)
+	}
+	
+	return observations, nil
+}
+
+// GetPendingObservationsCount retorna o número de observações pendentes
+func (m *ContractModel) GetPendingObservationsCount(contractID int) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM contract_client_observations 
+	          WHERE contract_id = $1 AND resolved = false`
+	err := m.DB.QueryRow(query, contractID).Scan(&count)
+	return count, err
+}
+
+// ResolveObservation marca uma observação como resolvida
+func (m *ContractModel) ResolveObservation(observationID, adminID int) error {
+	query := `UPDATE contract_client_observations 
+	          SET resolved = true, resolved_at = CURRENT_TIMESTAMP, resolved_by = $1 
+	          WHERE id = $2`
+	_, err := m.DB.Exec(query, adminID, observationID)
+	return err
+}
+
+// DeleteObservation remove uma observação (apenas se não resolvida)
+func (m *ContractModel) DeleteObservation(observationID, userID int) error {
+	query := `DELETE FROM contract_client_observations 
+	          WHERE id = $1 AND user_id = $2 AND resolved = false`
+	result, err := m.DB.Exec(query, observationID, userID)
+	if err != nil {
+		return err
+	}
+	
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return sql.ErrNoRows
+	}
+	
+	return nil
+}
+
+// CanAddObservation verifica se o cliente pode adicionar observações
+func (m *ContractModel) CanAddObservation(contractID int) (bool, error) {
+	var clientSigned, companySigned bool
+	query := `SELECT client_signed, company_signed FROM contracts WHERE id = $1`
+	err := m.DB.QueryRow(query, contractID).Scan(&clientSigned, &companySigned)
+	if err != nil {
+		return false, err
+	}
+	
+	// Pode adicionar se nenhuma das partes assinou ainda
+	return !clientSigned && !companySigned, nil
+}
 // ============================================
 // MÉTODOS AUXILIARES
 // ============================================

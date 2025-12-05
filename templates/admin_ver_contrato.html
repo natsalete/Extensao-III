@@ -23,6 +23,66 @@
 
     <div class="row">
       <div class="col-lg-8">
+        <!-- OBSERVAÇÕES DO CLIENTE (DESTAQUE) -->
+        {{if .Observations}}
+        <div class="card mb-4 border-warning no-print">
+          <div class="card-header bg-warning">
+            <h6 class="mb-0">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              Observações do Cliente
+              {{if gt .PendingObservationsCount 0}}
+              <span class="badge bg-danger ms-2">{{.PendingObservationsCount}} pendente(s)</span>
+              {{end}}
+            </h6>
+          </div>
+          <div class="card-body">
+            {{if gt .PendingObservationsCount 0}}
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-circle me-2"></i>
+              <strong>Atenção!</strong> O cliente adicionou observações que precisam ser analisadas antes do envio para assinatura.
+            </div>
+            {{end}}
+
+            <div class="list-group">
+              {{range .Observations}}
+              <div class="list-group-item {{if .Resolved}}list-group-item-success{{else}}list-group-item-warning{{end}}">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                      {{if .Resolved}}
+                      <span class="badge bg-success me-2">
+                        <i class="bi bi-check-circle"></i> Resolvida
+                      </span>
+                      {{else}}
+                      <span class="badge bg-danger me-2">
+                        <i class="bi bi-exclamation-triangle"></i> PENDENTE
+                      </span>
+                      {{end}}
+                      <strong class="me-2">{{.UserName}}</strong>
+                      <small class="text-muted">{{.CreatedAt.Format "02/01/2006 às 15:04"}}</small>
+                    </div>
+                    <p class="mb-1 fs-6">{{.Observation}}</p>
+                    {{if .Resolved}}
+                    <small class="text-success">
+                      <i class="bi bi-person-check"></i> Resolvida por {{.ResolverName}} em {{.ResolvedAt.Time.Format "02/01/2006 às 15:04"}}
+                    </small>
+                    {{end}}
+                  </div>
+                  {{if not .Resolved}}
+                  <form method="POST" action="/admin/contratos/{{$.Contract.ID}}/observacao/{{.ID}}/resolver" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-success" title="Marcar como resolvida">
+                      <i class="bi bi-check-lg"></i> Resolver
+                    </button>
+                  </form>
+                  {{end}}
+                </div>
+              </div>
+              {{end}}
+            </div>
+          </div>
+        </div>
+        {{end}}
+
         <!-- Contrato -->
         <div class="card mb-4" id="contract-content">
           <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -185,11 +245,21 @@
               {{end}}
               
               {{if eq .Contract.Status.Code "RASCUNHO"}}
+              {{if gt .PendingObservationsCount 0}}
+              <div class="alert alert-warning mb-2">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <small><strong>Resolva as observações do cliente antes de enviar!</strong></small>
+              </div>
+              <button type="button" class="btn btn-secondary w-100" disabled>
+                <i class="bi bi-send me-2"></i>Enviar para Assinatura
+              </button>
+              {{else}}
               <form method="POST" action="/admin/contratos/{{.Contract.ID}}/enviar-assinatura" onsubmit="return confirm('Enviar contrato para assinatura?')">
                 <button type="submit" class="btn btn-primary w-100">
                   <i class="bi bi-send me-2"></i>Enviar para Assinatura
                 </button>
               </form>
+              {{end}}
               {{end}}
 
               <a href="/admin/contratos" class="btn btn-secondary">
@@ -210,9 +280,16 @@
             <p><strong>Última atualização:</strong> {{.Contract.UpdatedAt.Format "02/01/2006 15:04"}}</p>
             <hr>
             <p><strong>ID Solicitação:</strong> #{{.Contract.ServiceRequestID}}</p>
-            <p class="mb-0"><strong>Status:</strong> 
+            <p><strong>Status:</strong> 
               <span class="badge {{.Contract.Status.BadgeClass}}">{{.Contract.Status.Name}}</span>
             </p>
+            {{if gt .PendingObservationsCount 0}}
+            <hr>
+            <div class="alert alert-danger mb-0 py-2">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <small><strong>{{.PendingObservationsCount}} observação(ões) pendente(s)</strong></small>
+            </div>
+            {{end}}
           </div>
         </div>
       </div>
@@ -316,6 +393,10 @@
       const dataURL = signaturePad.toDataURL('image/png');
       document.getElementById('signatureInput').value = dataURL;
       document.getElementById('signCompanyForm').submit();
+    }
+
+    function printContract() {
+      window.print();
     }
   </script>
 </body>
