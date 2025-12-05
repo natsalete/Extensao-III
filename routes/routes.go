@@ -18,6 +18,7 @@ func SetupRoutes() *mux.Router {
 	// Initialize models
 	userModel := models.NewUserModel(config.GetDB())
 	serviceModel := models.NewServiceModel(config.GetDB())
+	contractModel := models.NewContractModel(config.GetDB())
 
 	// Initialize services
 	whatsappService := services.NewWhatsAppService()
@@ -27,32 +28,23 @@ func SetupRoutes() *mux.Router {
 	authController := controllers.NewAuthController(userModel)
 	serviceController := controllers.NewServiceController(serviceModel)
 	adminController := controllers.NewAdminController(serviceModel, whatsappService)
+	contractController := controllers.NewContractController(contractModel, serviceModel)
 
 	// Static files
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
 
-	// Public routes
+	// ========== PUBLIC ROUTES ==========
 	r.HandleFunc("/", homeController.Index)
 	r.HandleFunc("/login", authController.LoginPage).Methods("GET")
 	r.HandleFunc("/login", authController.Login).Methods("POST")
 	r.HandleFunc("/register", authController.RegisterPage).Methods("GET")
 	r.HandleFunc("/register", authController.Register).Methods("POST")
+	r.HandleFunc("/logout", middleware.RequireAuth(authController.Logout))
 
-	// ========== CLIENT ROUTES (Protected) ==========
-	r.HandleFunc("/dashboard/cliente", 
-		middleware.RequireAuth(middleware.RequireClient(serviceController.ClienteDashboard))).Methods("GET")
-	
-	// Service request management
-	r.HandleFunc("/solicitar-servico", 
-		middleware.RequireAuth(middleware.RequireClient(serviceController.SolicitarServico))).Methods("GET", "POST")
-	r.HandleFunc("/solicitacao/{id:[0-9]+}", 
-		middleware.RequireAuth(middleware.RequireClient(serviceController.VerSolicitacao))).Methods("GET")
-	r.HandleFunc("/solicitacao/{id:[0-9]+}/editar", 
-		middleware.RequireAuth(middleware.RequireClient(serviceController.EditarSolicitacao))).Methods("GET", "POST")
-	r.HandleFunc("/solicitacao/{id:[0-9]+}/cancelar", 
-		middleware.RequireAuth(middleware.RequireClient(serviceController.CancelarSolicitacao))).Methods("POST")
-	
 	// ========== ADMIN ROUTES (Protected + Admin Only) ==========
+	// IMPORTANTE: Rotas ADMIN devem vir ANTES das rotas CLIENT para evitar conflitos!
+	
+	// Dashboard Admin
 	r.HandleFunc("/dashboard/admin", 
 		middleware.RequireAuth(middleware.RequireAdmin(adminController.AdminDashboard))).Methods("GET")
 	
@@ -63,13 +55,66 @@ func SetupRoutes() *mux.Router {
 		middleware.RequireAuth(middleware.RequireAdmin(adminController.EditarSolicitacaoAdmin))).Methods("GET", "POST")
 	r.HandleFunc("/admin/solicitacao/{id:[0-9]+}/deletar", 
 		middleware.RequireAuth(middleware.RequireAdmin(adminController.DeletarSolicitacao))).Methods("POST")
+	r.HandleFunc("/admin/solicitacao/{id:[0-9]+}/criar-contrato", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.CreateContract))).Methods("GET", "POST")
 	
 	// Status update
 	r.HandleFunc("/admin/update-status", 
 		middleware.RequireAuth(middleware.RequireAdmin(adminController.UpdateStatus))).Methods("POST")
 	
-	// ========== AUTH ROUTES ==========
-	r.HandleFunc("/logout", middleware.RequireAuth(authController.Logout))
+	// Admin contract routes - ORDEM IMPORTANTE!
+	// Lista deve vir ANTES dos detalhes com {id}
+	r.HandleFunc("/admin/contratos", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.ListContracts))).Methods("GET")
+	r.HandleFunc("/admin/contratos/{id:[0-9]+}/editar", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.EditContract))).Methods("GET", "POST")
+	r.HandleFunc("/admin/contratos/{id:[0-9]+}/enviar-assinatura", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.SendForSignature))).Methods("POST")
+	r.HandleFunc("/admin/contratos/{id:[0-9]+}/assinar-empresa", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.SignContractCompany))).Methods("POST")
+	
+	// ⚠️ NOVA ROTA: Admin resolve observação do cliente
+	r.HandleFunc("/admin/contratos/{id:[0-9]+}/observacao/{obs_id:[0-9]+}/resolver", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.ResolveObservation))).Methods("POST")
+	
+	r.HandleFunc("/admin/contratos/{id:[0-9]+}", 
+		middleware.RequireAuth(middleware.RequireAdmin(contractController.ViewContract))).Methods("GET")
+	
+	// ========== CLIENT ROUTES (Protected) ==========
+	// Rotas CLIENT vêm DEPOIS das rotas ADMIN
+	
+	// Dashboard Cliente
+	r.HandleFunc("/dashboard/cliente", 
+		middleware.RequireAuth(middleware.RequireClient(serviceController.ClienteDashboard))).Methods("GET")
+	
+	// Service request management
+	r.HandleFunc("/solicitar-servico", 
+		middleware.RequireAuth(middleware.RequireClient(serviceController.SolicitarServico))).Methods("GET", "POST")
+	r.HandleFunc("/solicitacao/{id:[0-9]+}/editar", 
+		middleware.RequireAuth(middleware.RequireClient(serviceController.EditarSolicitacao))).Methods("GET", "POST")
+	r.HandleFunc("/solicitacao/{id:[0-9]+}/cancelar", 
+		middleware.RequireAuth(middleware.RequireClient(serviceController.CancelarSolicitacao))).Methods("POST")
+	r.HandleFunc("/solicitacao/{id:[0-9]+}", 
+		middleware.RequireAuth(middleware.RequireClient(serviceController.VerSolicitacao))).Methods("GET")
+	
+	// Client contract routes - ORDEM IMPORTANTE!
+	// Rotas mais específicas DEVEM vir ANTES das genéricas
+	r.HandleFunc("/contratos", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.ClientContracts))).Methods("GET")
+	
+	// ⚠️ NOVAS ROTAS: Observações do cliente (DEVEM vir ANTES de /contratos/{id})
+	r.HandleFunc("/contratos/{id:[0-9]+}/observacao", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.AddClientObservation))).Methods("POST")
+	r.HandleFunc("/contratos/{id:[0-9]+}/observacao/{obs_id:[0-9]+}/deletar", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.DeleteClientObservation))).Methods("POST")
+	
+	// Assinar contrato
+	r.HandleFunc("/contratos/{id:[0-9]+}/assinar", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.ClientSignContract))).Methods("POST")
+	
+	// Ver contrato (rota genérica deve vir POR ÚLTIMO)
+	r.HandleFunc("/contratos/{id:[0-9]+}", 
+		middleware.RequireAuth(middleware.RequireClient(contractController.ClientViewContract))).Methods("GET")
 
 	return r
 }

@@ -27,7 +27,7 @@ func NewAdminController(serviceModel *models.ServiceModel, whatsappService *serv
 	}
 }
 
-// AdminDashboard - Dashboard principal do admin
+// AdminDashboard - Dashboard com paginação (5 por página)
 func (c *AdminController) AdminDashboard(w http.ResponseWriter, r *http.Request) {
 	// Capturar parâmetros de filtro e paginação
 	statusFilter := r.URL.Query().Get("status")
@@ -35,6 +35,7 @@ func (c *AdminController) AdminDashboard(w http.ResponseWriter, r *http.Request)
 	searchQuery := r.URL.Query().Get("search")
 	pageStr := r.URL.Query().Get("page")
 
+	// Configurar paginação
 	page := 1
 	if pageStr != "" {
 		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
@@ -42,10 +43,10 @@ func (c *AdminController) AdminDashboard(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	pageSize := 10
+	pageSize := 5 // MÁXIMO 5 POR PÁGINA
 	offset := (page - 1) * pageSize
 
-	// Buscar todas as solicitações com filtros
+	// Buscar solicitações com filtros e paginação
 	requests, totalCount, err := c.ServiceModel.GetAllWithFilters(
 		statusFilter,
 		serviceTypeFilter,
@@ -75,10 +76,10 @@ func (c *AdminController) AdminDashboard(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Contar por status (para os cards)
-	allRequests, err := c.ServiceModel.GetAll()
+	// Buscar estatísticas por status (para os cards)
+	stats, err := c.ServiceModel.GetStatusStats()
 	if err != nil {
-		allRequests = []models.ServiceRequest{}
+		stats = make(map[string]int)
 	}
 
 	session, _ := config.GetSessionStore().Get(r, "session")
@@ -107,15 +108,16 @@ func (c *AdminController) AdminDashboard(w http.ResponseWriter, r *http.Request)
 		CustomJS          string
 		AdditionalScripts []string
 		CurrentYear       int
+		IsAdmin		  bool
 	}{
 		UserName:          userName,
 		Requests:          requests,
 		ServiceTypes:      serviceTypes,
 		Statuses:          statuses,
-		SolicitadaCount:   c.countByStatus(allRequests, 1),
-		ConfirmadaCount:   c.countByStatus(allRequests, 2),
-		RealizadaCount:    c.countByStatus(allRequests, 3),
-		CanceladaCount:    c.countByStatus(allRequests, 4),
+		SolicitadaCount:   stats["solicitada"],
+		ConfirmadaCount:   stats["confirmada"],
+		RealizadaCount:    stats["realizada"],
+		CanceladaCount:    stats["cancelada"],
 		CurrentPage:       page,
 		TotalPages:        totalPages,
 		TotalCount:        totalCount,
@@ -130,6 +132,7 @@ func (c *AdminController) AdminDashboard(w http.ResponseWriter, r *http.Request)
 		CustomJS:          "/static/js/admin.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:		  true,
 	}
 
 	c.renderTemplate(w, []string{
@@ -175,6 +178,7 @@ func (c *AdminController) VerSolicitacaoAdmin(w http.ResponseWriter, r *http.Req
 		CustomJS          string
 		CurrentYear       int
 		AdditionalScripts []string
+		IsAdmin		  bool
 	}{
 		Service:           service,
 		Statuses:          statuses,
@@ -184,6 +188,7 @@ func (c *AdminController) VerSolicitacaoAdmin(w http.ResponseWriter, r *http.Req
 		CustomJS:          "/static/js/admin.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:		  true,
 	}
 
 	c.renderTemplate(w, []string{
@@ -260,7 +265,7 @@ func (c *AdminController) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		c.sendWhatsAppNotification(service, user, statusID)
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/admin/solicitacao/%d?success=status_updated", requestID), http.StatusFound)
+	http.Redirect(w, r, "/dashboard/admin?success=status_updated", http.StatusFound)
 }
 
 // DeletarSolicitacao - Deletar solicitação
@@ -287,16 +292,6 @@ func (c *AdminController) DeletarSolicitacao(w http.ResponseWriter, r *http.Requ
 
 // Helper methods
 
-func (c *AdminController) countByStatus(requests []models.ServiceRequest, statusID int) int {
-	count := 0
-	for _, req := range requests {
-		if req.StatusID == statusID {
-			count++
-		}
-	}
-	return count
-}
-
 func (c *AdminController) getSuccessMessage(r *http.Request) string {
 	switch r.URL.Query().Get("success") {
 	case "status_updated":
@@ -312,7 +307,6 @@ func (c *AdminController) getSuccessMessage(r *http.Request) string {
 	}
 }
 
-// renderTemplate - IGUAL AO ServiceController
 func (c *AdminController) renderTemplate(w http.ResponseWriter, templatePaths []string, data interface{}) {
 	// Criar template com funções auxiliares
 	tmpl := template.New("").Funcs(GetTemplateFuncs())
@@ -406,6 +400,7 @@ func (c *AdminController) showAdminEditForm(w http.ResponseWriter, r *http.Reque
 		CustomJS          string
 		CurrentYear       int
 		AdditionalScripts []string
+		IsAdmin		  bool
 	}{
 		Service:           service,
 		ServiceTypes:      serviceTypes,
@@ -416,6 +411,7 @@ func (c *AdminController) showAdminEditForm(w http.ResponseWriter, r *http.Reque
 		CustomJS:          "/static/js/solicitar_servico.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:		  true,
 	}
 
 	c.renderTemplate(w, []string{

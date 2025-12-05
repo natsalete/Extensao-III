@@ -1,0 +1,161 @@
+{{define "admin_criar_contrato.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+{{template "head" .}}
+<body>
+  {{template "navbar" .}}
+
+  <div class="container mt-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/dashboard/admin">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/admin/contratos">Contratos</a></li>
+        <li class="breadcrumb-item active">Criar Contrato</li>
+      </ol>
+    </nav>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-plus me-2"></i>Criar Novo Contrato</h5>
+          </div>
+          <div class="card-body">
+            <form method="POST" id="contractForm">
+              <!-- Valor Total -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-currency-dollar me-1"></i>Valor Total do Serviço *
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input type="number" name="total_value" class="form-control" step="0.01" min="0" required placeholder="9000.00">
+                </div>
+                <small class="text-muted">Ex: 9000.00</small>
+              </div>
+
+              <!-- Condições de Pagamento -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-credit-card me-1"></i>Condições de Pagamento *
+                </label>
+                <textarea name="payment_conditions" class="form-control" rows="3" required placeholder="Descreva as condições de pagamento..."></textarea>
+                <small class="text-muted">Ex: Sinal de R$ 3.500,00 após se tornar o quarto na fila. Restante R$ 5.500,00 após conclusão.</small>
+              </div>
+
+              <!-- Garantia - USANDO TABELA -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-shield-check me-1"></i>Garantia *
+                </label>
+                <select name="guarantee_type_id" class="form-select" id="guaranteeType" required onchange="toggleCustomGuarantee()">
+                  <option value="">Selecione uma opção</option>
+                  {{range .GuaranteeTypes}}
+                  <option value="{{.ID}}" data-requires-custom="{{.RequiresCustomText}}">{{.Name}}</option>
+                  {{end}}
+                </select>
+                <small class="text-muted">Selecione o tipo de garantia para este contrato</small>
+              </div>
+
+              <div class="mb-4" id="customGuaranteeDiv" style="display: none;">
+                <label class="form-label fw-bold">Descreva a Garantia Personalizada</label>
+                <textarea name="guarantee_custom" class="form-control" rows="2" id="guaranteeCustom"></textarea>
+              </div>
+
+              <!-- Requisitos do Cliente -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-list-check me-1"></i>Requisitos do Cliente
+                </label>
+                <textarea name="client_requirements" class="form-control" rows="3" placeholder="O que o cliente precisa fornecer..."></textarea>
+                <small class="text-muted">Ex: Fornecimento de 1 metro de brita 0, energia 220V e água suficiente no local durante a perfuração.</small>
+              </div>
+
+              <!-- Materiais Utilizados -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-box-seam me-1"></i>Materiais Utilizados
+                </label>
+                <textarea name="materials_used" class="form-control" rows="3" placeholder="Liste os materiais..."></textarea>
+                <small class="text-muted">Ex: Cano PN80 de 100mm, bomba caneta Intech Machine ou Evoluti (1/4, 1/3 ou 1/2 HP).</small>
+              </div>
+
+              <!-- Observações -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-chat-left-text me-1"></i>Observações Adicionais
+                </label>
+                <textarea name="additional_notes" class="form-control" rows="3" placeholder="Outras informações relevantes..."></textarea>
+              </div>
+
+              <hr>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-save me-2"></i>Criar Contrato
+                </button>
+                <a href="/admin/solicitacao/{{.Service.ID}}" class="btn btn-secondary">
+                  <i class="bi bi-arrow-left me-2"></i>Voltar
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumo da Solicitação -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Dados da Solicitação</h6>
+          </div>
+          <div class="card-body">
+            <p><strong>ID:</strong> #{{.Service.ID}}</p>
+            <p><strong>Cliente:</strong> {{.Service.FullName}}</p>
+            <p><strong>Email:</strong> {{.Service.UserEmail}}</p>
+            <p><strong>Serviço:</strong> {{.Service.ServiceTypeName}}</p>
+            <hr>
+            <p><strong>Endereço:</strong><br>
+              {{.Service.Logradouro}}, {{.Service.Numero}}<br>
+              {{.Service.Bairro}} - {{.Service.Cidade}}/{{.Service.Estado}}<br>
+              CEP: {{.Service.CEP}}
+            </p>
+            <hr>
+            <p><strong>Data da Vistoria:</strong><br>
+              {{.Service.PreferredDate.Format "02/01/2006"}} às {{slice .Service.PreferredTime 11 16}}
+            </p>
+            {{if .Service.Description}}
+            <hr>
+            <p><strong>Descrição:</strong><br>{{.Service.Description}}</p>
+            {{end}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{template "footer" .}}
+  {{template "scripts" .}}
+
+  <script>
+    function toggleCustomGuarantee() {
+      const select = document.getElementById('guaranteeType');
+      const selectedOption = select.options[select.selectedIndex];
+      const requiresCustom = selectedOption.getAttribute('data-requires-custom') === 'true';
+      
+      const div = document.getElementById('customGuaranteeDiv');
+      const input = document.getElementById('guaranteeCustom');
+      
+      if (requiresCustom) {
+        div.style.display = 'block';
+        input.required = true;
+      } else {
+        div.style.display = 'none';
+        input.required = false;
+        input.value = '';
+      }
+    }
+  </script>
+</body>
+</html>
+{{end}}

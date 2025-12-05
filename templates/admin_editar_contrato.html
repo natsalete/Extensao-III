@@ -1,0 +1,159 @@
+{{define "admin_editar_contrato.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+{{template "head" .}}
+<body>
+  {{template "navbar" .}}
+
+  <div class="container mt-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/dashboard/admin">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/admin/contratos">Contratos</a></li>
+        <li class="breadcrumb-item"><a href="/admin/contratos/{{.Contract.ID}}">{{.Contract.ContractNumber}}</a></li>
+        <li class="breadcrumb-item active">Editar</li>
+      </ol>
+    </nav>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="bi bi-pencil me-2"></i>Editar Contrato {{.Contract.ContractNumber}}</h5>
+          </div>
+          <div class="card-body">
+            <form method="POST">
+              <!-- Valor Total -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-currency-dollar me-1"></i>Valor Total do Serviço *
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">R$</span>
+                  <input type="number" name="total_value" class="form-control" step="0.01" min="0" required value="{{printf "%.2f" .Contract.TotalValue}}">
+                </div>
+              </div>
+
+              <!-- Condições de Pagamento -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-credit-card me-1"></i>Condições de Pagamento *
+                </label>
+                <textarea name="payment_conditions" class="form-control" rows="3" required>{{.Contract.PaymentConditions}}</textarea>
+              </div>
+
+              <!-- Garantia - USANDO TABELA -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-shield-check me-1"></i>Garantia *
+                </label>
+                <select name="guarantee_type_id" class="form-select" id="guaranteeType" required onchange="toggleCustomGuarantee()">
+                  {{range .GuaranteeTypes}}
+                  <option value="{{.ID}}" 
+                          data-requires-custom="{{.RequiresCustomText}}"
+                          {{if eq .ID $.Contract.GuaranteeTypeID}}selected{{end}}>
+                    {{.Name}}
+                  </option>
+                  {{end}}
+                </select>
+              </div>
+
+              <div class="mb-4" id="customGuaranteeDiv" {{if not .Contract.GuaranteeType.RequiresCustomText}}style="display: none;"{{end}}>
+                <label class="form-label fw-bold">Descreva a Garantia Personalizada</label>
+                <textarea name="guarantee_custom" class="form-control" rows="2" id="guaranteeCustom">{{if .Contract.GuaranteeCustom.Valid}}{{.Contract.GuaranteeCustom.String}}{{end}}</textarea>
+              </div>
+
+              <!-- Requisitos do Cliente -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-list-check me-1"></i>Requisitos do Cliente
+                </label>
+                <textarea name="client_requirements" class="form-control" rows="3">{{if .Contract.ClientRequirements.Valid}}{{.Contract.ClientRequirements.String}}{{end}}</textarea>
+              </div>
+
+              <!-- Materiais Utilizados -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-box-seam me-1"></i>Materiais Utilizados
+                </label>
+                <textarea name="materials_used" class="form-control" rows="3">{{if .Contract.MaterialsUsed.Valid}}{{.Contract.MaterialsUsed.String}}{{end}}</textarea>
+              </div>
+
+              <!-- Observações -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">
+                  <i class="bi bi-chat-left-text me-1"></i>Observações Adicionais
+                </label>
+                <textarea name="additional_notes" class="form-control" rows="3">{{if .Contract.AdditionalNotes.Valid}}{{.Contract.AdditionalNotes.String}}{{end}}</textarea>
+              </div>
+
+              <hr>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-save me-2"></i>Salvar Alterações
+                </button>
+                <a href="/admin/contratos/{{.Contract.ID}}" class="btn btn-secondary">
+                  <i class="bi bi-x-lg me-2"></i>Cancelar
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        {{if .Contract.ServiceRequest}}
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Dados da Solicitação</h6>
+          </div>
+          <div class="card-body small">
+            <p><strong>Cliente:</strong> {{.Contract.ServiceRequest.FullName}}</p>
+            <p><strong>Email:</strong> {{.Contract.ServiceRequest.UserEmail}}</p>
+            <p><strong>Serviço:</strong> {{.Contract.ServiceRequest.ServiceTypeName}}</p>
+            <hr>
+            <p><strong>Local:</strong><br>
+              {{.Contract.ServiceRequest.Logradouro}}, {{.Contract.ServiceRequest.Numero}}<br>
+              {{.Contract.ServiceRequest.Bairro}} - {{.Contract.ServiceRequest.Cidade}}/{{.Contract.ServiceRequest.Estado}}
+            </p>
+          </div>
+        </div>
+        {{end}}
+
+        <div class="alert alert-info mt-3">
+          <i class="bi bi-info-circle me-2"></i>
+          <small>O contrato só pode ser editado enquanto não houver assinaturas.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{template "footer" .}}
+  {{template "scripts" .}}
+
+  <script>
+    function toggleCustomGuarantee() {
+      const select = document.getElementById('guaranteeType');
+      const selectedOption = select.options[select.selectedIndex];
+      const requiresCustom = selectedOption.getAttribute('data-requires-custom') === 'true';
+      
+      const div = document.getElementById('customGuaranteeDiv');
+      const input = document.getElementById('guaranteeCustom');
+      
+      if (requiresCustom) {
+        div.style.display = 'block';
+        input.required = true;
+      } else {
+        div.style.display = 'none';
+        input.required = false;
+      }
+    }
+    
+    // Inicializar ao carregar
+    document.addEventListener('DOMContentLoaded', toggleCustomGuarantee);
+  </script>
+</body>
+</html>
+{{end}}

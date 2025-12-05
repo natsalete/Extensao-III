@@ -72,10 +72,34 @@
                       <label class="form-label fw-bold">Estado *</label>
                       <select class="form-control" name="estado" required>
                         <option value="">Selecione</option>
+                         <option value="">Selecione</option>
+                        <option value="AC" {{if eq .Service.Estado "AC"}}selected{{end}}>Acre</option>
+                        <option value="AL" {{if eq .Service.Estado "AL"}}selected{{end}}>Alagoas</option>
+                        <option value="AP" {{if eq .Service.Estado "AP"}}selected{{end}}>Amapá</option>
+                        <option value="AM" {{if eq .Service.Estado "AM"}}selected{{end}}>Amazonas</option>
+                        <option value="BA" {{if eq .Service.Estado "BA"}}selected{{end}}>Bahia</option>
+                        <option value="CE" {{if eq .Service.Estado "CE"}}selected{{end}}>Ceará</option>
+                        <option value="DF" {{if eq .Service.Estado "DF"}}selected{{end}}>Distrito Federal</option>
+                        <option value="ES" {{if eq .Service.Estado "ES"}}selected{{end}}>Espírito Santo</option>
+                        <option value="GO" {{if eq .Service.Estado "GO"}}selected{{end}}>Goiás</option>
+                        <option value="MA" {{if eq .Service.Estado "MA"}}selected{{end}}>Maranhão</option>
+                        <option value="MT" {{if eq .Service.Estado "MT"}}selected{{end}}>Mato Grosso</option>
+                        <option value="MS" {{if eq .Service.Estado "MS"}}selected{{end}}>Mato Grosso do Sul</option>
                         <option value="MG" {{if eq .Service.Estado "MG"}}selected{{end}}>Minas Gerais</option>
-                        <option value="SP" {{if eq .Service.Estado "SP"}}selected{{end}}>São Paulo</option>
+                        <option value="PA" {{if eq .Service.Estado "PA"}}selected{{end}}>Pará</option>
+                        <option value="PB" {{if eq .Service.Estado "PB"}}selected{{end}}>Paraíba</option>
+                        <option value="PR" {{if eq .Service.Estado "PR"}}selected{{end}}>Paraná</option>
+                        <option value="PE" {{if eq .Service.Estado "PE"}}selected{{end}}>Pernambuco</option>
+                        <option value="PI" {{if eq .Service.Estado "PI"}}selected{{end}}>Piauí</option>
                         <option value="RJ" {{if eq .Service.Estado "RJ"}}selected{{end}}>Rio de Janeiro</option>
-                        <!-- Adicione outros estados -->
+                        <option value="RN" {{if eq .Service.Estado "RN"}}selected{{end}}>Rio Grande do Norte</option>
+                        <option value="RS" {{if eq .Service.Estado "RS"}}selected{{end}}>Rio Grande do Sul</option>
+                        <option value="RO" {{if eq .Service.Estado "RO"}}selected{{end}}>Rondônia</option>
+                        <option value="RR" {{if eq .Service.Estado "RR"}}selected{{end}}>Roraima</option>
+                        <option value="SC" {{if eq .Service.Estado "SC"}}selected{{end}}>Santa Catarina</option>
+                        <option value="SP" {{if eq .Service.Estado "SP"}}selected{{end}}>São Paulo</option>
+                        <option value="SE" {{if eq .Service.Estado "SE"}}selected{{end}}>Sergipe</option>
+                        <option value="TO" {{if eq .Service.Estado "TO"}}selected{{end}}>Tocantins</option>
                       </select>
                     </div>
                   </div>
@@ -93,7 +117,7 @@
                     <div class="col-md-6 mb-3">
                       <label class="form-label fw-bold">Horário *</label>
                       <input type="time" class="form-control" name="preferred_time" 
-                             value="{{slice .Service.PreferredTime 0 5}}" required />
+                             value="{{slice .Service.PreferredTime 11 16}}" required />
                     </div>
                   </div>
                 </div>

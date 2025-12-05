@@ -1,0 +1,473 @@
+{{define "cliente_ver_contrato.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+{{template "head" .}}
+<body>
+  {{template "navbar" .}}
+
+  <div class="container mt-4">
+    {{if .SuccessMsg}}
+    <div class="alert alert-success alert-dismissible fade show no-print">
+      <i class="bi bi-check-circle-fill me-2"></i>{{.SuccessMsg}}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {{end}}
+
+    <nav aria-label="breadcrumb" class="no-print">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/dashboard/cliente">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="/contratos">Meus Contratos</a></li>
+        <li class="breadcrumb-item active">{{.Contract.ContractNumber}}</li>
+      </ol>
+    </nav>
+
+    <div class="row">
+      <div class="col-lg-8">
+        <!-- Contrato -->
+        <div class="card mb-4" id="contract-content">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Contrato {{.Contract.ContractNumber}}</h5>
+            {{if .Contract.Status}}
+            <span class="badge {{.Contract.Status.BadgeClass}}">{{.Contract.Status.Name}}</span>
+            {{end}}
+          </div>
+          <div class="card-body">
+            <!-- Dados do Serviço -->
+            {{if .Contract.ServiceRequest}}
+            <div class="alert alert-light border">
+              <h6 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Dados do Serviço</h6>
+              <div class="row">
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Serviço:</strong> {{.Contract.ServiceRequest.ServiceTypeName}}</p>
+                  <p class="mb-1"><strong>Local:</strong> {{.Contract.ServiceRequest.Logradouro}}, {{.Contract.ServiceRequest.Numero}}</p>
+                  <p class="mb-0"><strong>Bairro:</strong> {{.Contract.ServiceRequest.Bairro}} - {{.Contract.ServiceRequest.Cidade}}/{{.Contract.ServiceRequest.Estado}}</p>
+                </div>
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>CEP:</strong> {{.Contract.ServiceRequest.CEP}}</p>
+                  <p class="mb-0"><strong>Data Vistoria:</strong> {{.Contract.ServiceRequest.PreferredDate.Format "02/01/2006"}}</p>
+                </div>
+              </div>
+            </div>
+            {{end}}
+
+            <hr>
+
+            <h6 class="text-primary mb-3"><i class="bi bi-currency-dollar me-2"></i>Valor Total</h6>
+            <p class="fs-3 fw-bold text-success">R$ {{printf "%.2f" .Contract.TotalValue}}</p>
+
+            <hr>
+
+            <h6 class="text-primary mb-3"><i class="bi bi-credit-card me-2"></i>Condições de Pagamento</h6>
+            <p>{{.Contract.PaymentConditions}}</p>
+
+            <hr>
+
+            <h6 class="text-primary mb-3"><i class="bi bi-shield-check me-2"></i>Garantia</h6>
+            <p>
+              {{if .Contract.GuaranteeType}}
+              <span class="badge bg-info fs-6">{{.Contract.GuaranteeType.Name}}</span>
+              {{if .Contract.GuaranteeCustom.Valid}}
+              <p class="mt-2">{{.Contract.GuaranteeCustom.String}}</p>
+              {{end}}
+              {{end}}
+            </p>
+
+            {{if .Contract.ClientRequirements.Valid}}
+            <hr>
+            <h6 class="text-primary mb-3"><i class="bi bi-list-check me-2"></i>Seus Requisitos</h6>
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              {{.Contract.ClientRequirements.String}}
+            </div>
+            {{end}}
+
+            {{if .Contract.MaterialsUsed.Valid}}
+            <hr>
+            <h6 class="text-primary mb-3"><i class="bi bi-box-seam me-2"></i>Materiais Utilizados</h6>
+            <p>{{.Contract.MaterialsUsed.String}}</p>
+            {{end}}
+
+            {{if .Contract.AdditionalNotes.Valid}}
+            <hr>
+            <h6 class="text-primary mb-3"><i class="bi bi-chat-left-text me-2"></i>Observações</h6>
+            <p>{{.Contract.AdditionalNotes.String}}</p>
+            {{end}}
+          </div>
+        </div>
+
+        <!-- NOVA SEÇÃO: Observações do Cliente -->
+        {{if .CanAddObservation}}
+        <div class="card mb-4 no-print">
+          <div class="card-header bg-warning">
+            <h6 class="mb-0">
+              <i class="bi bi-chat-square-text me-2"></i>
+              Suas Observações sobre o Contrato
+              {{if gt .PendingObservationsCount 0}}
+              <span class="badge bg-danger ms-2">{{.PendingObservationsCount}} pendente(s)</span>
+              {{end}}
+            </h6>
+          </div>
+          <div class="card-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              <strong>Encontrou algum erro ou tem dúvidas?</strong><br>
+              Adicione suas observações aqui e nossa equipe irá analisá-las antes da assinatura.
+            </div>
+
+            <!-- Formulário para adicionar observação -->
+            <form method="POST" action="/contratos/{{.Contract.ID}}/observacao" class="mb-4">
+              <div class="mb-3">
+                <label class="form-label fw-bold">Nova Observação</label>
+                <textarea name="observation" class="form-control" rows="3" required 
+                          placeholder="Descreva o que precisa ser ajustado ou corrigido..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send me-2"></i>Enviar Observação
+              </button>
+            </form>
+
+            <!-- Lista de observações -->
+            {{if .Observations}}
+            <hr>
+            <h6 class="mb-3">Observações Enviadas</h6>
+            <div class="list-group">
+              {{range .Observations}}
+              <div class="list-group-item {{if .Resolved}}list-group-item-success{{end}}">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                      {{if .Resolved}}
+                      <span class="badge bg-success me-2">
+                        <i class="bi bi-check-circle"></i> Resolvida
+                      </span>
+                      {{else}}
+                      <span class="badge bg-warning text-dark me-2">
+                        <i class="bi bi-clock"></i> Pendente
+                      </span>
+                      {{end}}
+                      <small class="text-muted">{{.CreatedAt.Format "02/01/2006 às 15:04"}}</small>
+                    </div>
+                    <p class="mb-1">{{.Observation}}</p>
+                    {{if .Resolved}}
+                    <small class="text-success">
+                      <i class="bi bi-person-check"></i> Resolvida por {{.ResolverName}} em {{.ResolvedAt.Time.Format "02/01/2006 às 15:04"}}
+                    </small>
+                    {{end}}
+                  </div>
+                  {{if not .Resolved}}
+                  <button type="button" class="btn btn-sm btn-outline-danger" 
+                          onclick="deleteObservation('{{.ID}}')">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  {{end}}
+                </div>
+              </div>
+              {{end}}
+            </div>
+            {{end}}
+          </div>
+        </div>
+        {{end}}
+
+        <!-- Assinaturas -->
+        <div class="card mb-4" id="signatures-section">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-pen me-2"></i>Assinaturas</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <!-- Assinatura Empresa -->
+              <div class="col-md-6 mb-3 mb-md-0">
+                <div class="border rounded p-3 text-center {{if .Contract.CompanySigned}}border-success{{else}}border-secondary{{end}}">
+                  <h6><i class="bi bi-building me-2"></i>Martins Poços (Contratada)</h6>
+                  {{if .Contract.CompanySigned}}
+                  <div class="my-3 signature-display">
+                    {{if .CompanySignatureData}}
+                    <img src="data:image/png;base64,{{.CompanySignatureData}}" 
+                         alt="Assinatura Empresa" 
+                         class="img-fluid signature-img" 
+                         onerror="console.error('Erro ao carregar assinatura da empresa'); this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="signature-error" style="display:none;">
+                      <i class="bi bi-exclamation-triangle"></i> Erro ao carregar assinatura
+                    </div>
+                    {{else}}
+                    <p class="text-muted">Assinatura não disponível</p>
+                    {{end}}
+                  </div>
+                  <small class="text-success"><i class="bi bi-check-circle-fill"></i> Assinado em {{.Contract.CompanySignedAt.Time.Format "02/01/2006 15:04"}}</small>
+                  {{else}}
+                  <p class="text-muted my-3"><i class="bi bi-hourglass"></i> Aguardando assinatura da empresa</p>
+                  {{end}}
+                </div>
+              </div>
+
+              <!-- Assinatura Cliente -->
+              <div class="col-md-6">
+                <div class="border rounded p-3 text-center {{if .Contract.ClientSigned}}border-success{{else}}border-warning{{end}}">
+                  <h6><i class="bi bi-person me-2"></i>Você (Contratante)</h6>
+                  {{if .Contract.ClientSigned}}
+                  <div class="my-3 signature-display">
+                    {{if .ClientSignatureData}}
+                    <img src="data:image/png;base64,{{.ClientSignatureData}}" 
+                         alt="Sua Assinatura" 
+                         class="img-fluid signature-img" 
+                         onerror="console.error('Erro ao carregar sua assinatura'); this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div class="signature-error" style="display:none;">
+                      <i class="bi bi-exclamation-triangle"></i> Erro ao carregar assinatura
+                    </div>
+                    {{else}}
+                    <p class="text-muted">Assinatura não disponível</p>
+                    {{end}}
+                  </div>
+                  <small class="text-success"><i class="bi bi-check-circle-fill"></i> Assinado em {{.Contract.ClientSignedAt.Time.Format "02/01/2006 15:04"}}</small>
+                  {{else}}
+                  {{if .Contract.Status}}
+                  {{if eq .Contract.Status.Code "AGUARDANDO_ASSINATURAS"}}
+                  {{if gt .PendingObservationsCount 0}}
+                  <div class="alert alert-warning my-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Você tem {{.PendingObservationsCount}} observação(ões) pendente(s)</strong><br>
+                    <small>Aguarde a análise da equipe antes de assinar.</small>
+                  </div>
+                  {{else}}
+                  <div class="my-3">
+                    <button class="btn btn-success btn-lg no-print" data-bs-toggle="modal" data-bs-target="#signClientModal">
+                      <i class="bi bi-pen me-2"></i>Assinar Contrato
+                    </button>
+                  </div>
+                  <small class="text-warning"><i class="bi bi-exclamation-circle"></i> Sua assinatura é necessária</small>
+                  {{end}}
+                  {{else}}
+                  <p class="text-muted my-3"><i class="bi bi-hourglass"></i> Aguardando</p>
+                  {{end}}
+                  {{end}}
+                  {{end}}
+                </div>
+              </div>
+            </div>
+
+            {{if .Contract.Status}}
+            {{if eq .Contract.Status.Code "ASSINADO"}}
+            <div class="alert alert-success mt-4 text-center">
+              <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+              <strong>Contrato Finalizado!</strong><br>
+              Ambas as partes assinaram. O serviço está aprovado.
+            </div>
+            {{end}}
+            {{end}}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4">
+        <div class="card mb-4 no-print">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Informações</h6>
+          </div>
+          <div class="card-body">
+            <p><strong>Nº Contrato:</strong> {{.Contract.ContractNumber}}</p>
+            <p><strong>Criado em:</strong> {{.Contract.CreatedAt.Format "02/01/2006 15:04"}}</p>
+            <p><strong>Última atualização:</strong> {{.Contract.UpdatedAt.Format "02/01/2006 15:04"}}</p>
+            {{if .Contract.Status}}
+            <hr>
+            <p class="mb-0"><strong>Status:</strong><br>
+              <span class="badge {{.Contract.Status.BadgeClass}} mt-1">{{.Contract.Status.Name}}</span>
+            </p>
+            {{end}}
+            {{if gt .PendingObservationsCount 0}}
+            <hr>
+            <div class="alert alert-warning mb-0">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>{{.PendingObservationsCount}} observação(ões) pendente(s)</strong>
+            </div>
+            {{end}}
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 no-print">
+          {{if .Contract.Status}}
+          {{if eq .Contract.Status.Code "ASSINADO"}}
+          <button onclick="printContract()" class="btn btn-success">
+            <i class="bi bi-printer me-2"></i>Imprimir / Salvar PDF
+          </button>
+          {{end}}
+          {{end}}
+          <a href="/contratos" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Voltar
+          </a>
+          <a href="/dashboard/cliente" class="btn btn-outline-primary">
+            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Assinatura Cliente -->
+  <div class="modal fade" id="signClientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title"><i class="bi bi-pen me-2"></i>Assinar Contrato</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form method="POST" action="/contratos/{{.Contract.ID}}/assinar" id="signClientForm">
+          <div class="modal-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i>
+              Ao assinar, você concorda com todos os termos do contrato acima.
+            </div>
+            
+            <p class="fw-bold mb-3">Desenhe sua assinatura no quadro abaixo:</p>
+            
+            <div class="signature-canvas-container border rounded mb-3">
+              <canvas id="clientSignaturePad"></canvas>
+            </div>
+            
+            <input type="hidden" name="signature" id="clientSignatureInput">
+            
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearClientSignature()">
+                <i class="bi bi-eraser me-1"></i>Limpar
+              </button>
+              <small class="text-muted align-self-center">Use o mouse ou dedo para desenhar</small>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-success" onclick="saveClientSignature(event)">
+              <i class="bi bi-check-lg me-2"></i>Confirmar Assinatura
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {{template "footer" .}}
+  {{template "scripts" .}}
+
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  
+  <script>
+    let clientSignaturePad;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const modalEl = document.getElementById('signClientModal');
+      
+      if (modalEl) {
+        modalEl.addEventListener('shown.bs.modal', function () {
+          console.log('Modal cliente aberto, inicializando canvas...');
+          setTimeout(initClientSignaturePad, 100);
+        });
+      }
+    });
+
+    function initClientSignaturePad() {
+      const canvas = document.getElementById('clientSignaturePad');
+      
+      if (!canvas) {
+        console.error('Canvas não encontrado!');
+        return;
+      }
+
+      const container = canvas.parentElement;
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      
+      canvas.width = container.offsetWidth * ratio;
+      canvas.height = 200 * ratio;
+      canvas.style.width = container.offsetWidth + 'px';
+      canvas.style.height = '200px';
+      
+      console.log('Canvas dimensões:', canvas.width, 'x', canvas.height);
+
+      clientSignaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(0, 0, 0)',
+        minWidth: 0.5,
+        maxWidth: 2.5,
+        throttle: 0,
+        minDistance: 0,
+      });
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(ratio, ratio);
+
+      console.log('SignaturePad cliente inicializado');
+    }
+
+    function clearClientSignature() {
+      if (clientSignaturePad) {
+        clientSignaturePad.clear();
+        console.log('Assinatura cliente limpa');
+      }
+    }
+
+    function saveClientSignature(event) {
+      event.preventDefault();
+      
+      if (!clientSignaturePad) {
+        alert('Erro: Canvas de assinatura não foi inicializado.');
+        return;
+      }
+
+      if (clientSignaturePad.isEmpty()) {
+        alert('Por favor, desenhe sua assinatura antes de confirmar.');
+        return;
+      }
+
+      try {
+        const dataURL = clientSignaturePad.toDataURL('image/png');
+        console.log('✅ Assinatura capturada:', dataURL.length, 'caracteres');
+        document.getElementById('clientSignatureInput').value = dataURL;
+        document.getElementById('signClientForm').submit();
+      } catch (error) {
+        console.error('Erro ao salvar assinatura:', error);
+        alert('Erro ao processar assinatura: ' + error.message);
+      }
+    }
+
+    function printContract() {
+      window.print();
+    }
+
+    function deleteObservation(id) {
+      if (confirm('Tem certeza que deseja remover esta observação?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/contratos/{{.Contract.ID}}/observacao/' + id + '/deletar';
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
+  </script>
+
+  <style>
+    .signature-canvas-container {
+      background: white;
+      position: relative;
+    }
+    
+    .signature-img {
+      max-height: 150px;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 10px;
+      background: white;
+    }
+
+    .list-group-item-success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</body>
+</html>
+{{end}}

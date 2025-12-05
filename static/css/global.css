@@ -71,24 +71,38 @@ body {
 .footer-custom h5,
 .footer-custom h6 {
   color: white;
+  font-weight: 600;
 }
 
-.footer-custom a {
+.footer-link {
   color: rgba(255, 255, 255, 0.7);
-  text-decoration: none;
-  transition: color 0.3s ease;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
 }
 
-.footer-custom a:hover {
+.footer-link:hover {
   color: white;
+  transform: translateX(4px);
+}
+
+.footer-link i {
+  transition: transform 0.3s ease;
+}
+
+.footer-link:hover i {
+  transform: scale(1.1);
 }
 
 .footer-custom .text-white-50 {
   color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 0.875rem;
 }
 
-.footer-custom hr {
-  border-color: rgba(255, 255, 255, 0.3);
+.footer-divider {
+  border-color: rgba(255, 255, 255, 0.2);
+  opacity: 1;
 }
 
 /* ========================================
@@ -380,6 +394,22 @@ body {
   .btn {
     font-size: 0.8125rem;
     padding: 0.5rem 1rem;
+  }
+
+   .footer-custom {
+    padding: 2rem 0 !important;
+  }
+  
+  .footer-custom h5 {
+    font-size: 1.125rem;
+  }
+  
+  .footer-custom h6 {
+    font-size: 1rem;
+  }
+  
+  .footer-link {
+    font-size: 0.8125rem;
   }
 }
 

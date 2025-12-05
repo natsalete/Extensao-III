@@ -116,6 +116,7 @@ func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Requ
 		CustomJS          string
 		AdditionalScripts []string
 		CurrentYear       int
+		IsAdmin           bool
 	}{
 		UserName:          userName,
 		Requests:          requests,
@@ -138,6 +139,7 @@ func (c *ServiceController) ClienteDashboard(w http.ResponseWriter, r *http.Requ
 		CustomJS:          "../static/js/cliente_dashboard.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:           false,
 	}
 
 	c.renderTemplate(w, []string{
@@ -215,6 +217,7 @@ func (c *ServiceController) VerSolicitacao(w http.ResponseWriter, r *http.Reques
 		CustomJS          string
 		CurrentYear       int
 		AdditionalScripts []string
+		IsAdmin           bool
 	}{
 		Service:           service,
 		UserName:          userName,
@@ -223,6 +226,7 @@ func (c *ServiceController) VerSolicitacao(w http.ResponseWriter, r *http.Reques
 		CustomJS:          "../static/js/ver_solicitacao.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:           false,
 	}
 
 	c.renderTemplate(w, []string{
@@ -350,6 +354,7 @@ func (c *ServiceController) showServiceRequestForm(w http.ResponseWriter, r *htt
 		CustomJS          string
 		CurrentYear       int
 		AdditionalScripts []string
+		IsAdmin           bool
 	}{
 		ServiceTypes:      serviceTypes,
 		UserName:          userName,
@@ -358,6 +363,7 @@ func (c *ServiceController) showServiceRequestForm(w http.ResponseWriter, r *htt
 		CustomJS:          "../static/js/solicitar_servico.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:           false,
 	}
 
 	c.renderTemplate(w, []string{
@@ -402,6 +408,7 @@ func (c *ServiceController) showEditForm(w http.ResponseWriter, r *http.Request,
 		CustomJS          string
 		CurrentYear       int
 		AdditionalScripts []string
+		IsAdmin           bool
 	}{
 		Service:           service,
 		ServiceTypes:      serviceTypes,
@@ -411,6 +418,7 @@ func (c *ServiceController) showEditForm(w http.ResponseWriter, r *http.Request,
 		CustomJS:          "/static/js/solicitar_servico.js",
 		AdditionalScripts: []string{},
 		CurrentYear:       time.Now().Year(),
+		IsAdmin:           false,
 	}
 
 	c.renderTemplate(w, []string{
